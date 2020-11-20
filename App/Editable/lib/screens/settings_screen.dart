@@ -13,7 +13,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   var _preprocess = false;
-  var _fontSize = 18.0;
 
   Widget _buildSwitchListTile(
     String title,
@@ -75,37 +74,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           _preprocess = newValue;
                         });
                       },
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            'Change font size:',
-                            style: TextStyle(
-                              fontSize: _fontSize,
-                            ),
-                          ),
-                        ),
-                        Slider(
-                          value: _fontSize,
-                          min: 16,
-                          max: 22,
-                          divisions: 4,
-                          label: null,
-                          activeColor:
-                              Theme.of(context).accentColor.withOpacity(0.8),
-                          onChanged: (value) {
-                            setState(() {
-                              _fontSize = value;
-                            });
-                          },
-                        ),
-                      ],
                     ),
                   ],
                 ),

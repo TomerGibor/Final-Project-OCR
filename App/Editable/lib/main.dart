@@ -45,31 +45,3 @@ class App extends StatelessWidget {
     );
   }
 }
-
-/*
-child: FutureBuilder(
-        future:
-            Provider.of<Settings>(context, listen: false).fetchAndSetSettings(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-          return MaterialApp(
-            theme: ThemeData(
-              primarySwatch: Colors.indigo,
-              accentColor: Colors.deepOrange,
-              visualDensity: VisualDensity.adaptivePlatformDensity,
-            ),
-            home: HomeScreen(),
-            routes: {
-              SettingsScreen.routeName: (ctx) => SettingsScreen(),
-              AddEditableScreen.routeName: (ctx) => AddEditableScreen(),
-              EditEditableScreen.routeName: (ctx) => EditEditableScreen(),
-            },
-            debugShowCheckedModeBanner: false,
-          );
-        },
-      ),
-      */

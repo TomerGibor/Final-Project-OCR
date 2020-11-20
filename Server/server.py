@@ -23,12 +23,12 @@ class Data(BaseModel):
 i = 0
 
 
-@app.post('/convert')
+@app.post('/image_to_text')
 async def image_to_text(data: Data) -> Dict[str, str]:
     global i
     base64_decoded = base64.b64decode(data.b64image)
     pil_image = PIL.Image.open(io.BytesIO(base64_decoded)).convert('L')
-    pil_image.save(f'{datetime.now()}.png')
+    pil_image.save(f'{datetime.now().strftime("%Y-%b-%dT%H-%m-%S")}.png')
     print(data.preprocessing)
 
     # print(image.b64image)

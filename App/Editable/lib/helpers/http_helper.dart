@@ -11,7 +11,7 @@ class HTTPHelper {
     String b64Image,
     bool preprocessing,
   ) async {
-    final uri = Uri.http(baseUrl, '/convert');
+    final uri = Uri.http(baseUrl, '/image_to_text');
     try {
       final response = await http.post(uri,
           body: json.encode(
