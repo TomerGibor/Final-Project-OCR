@@ -32,7 +32,7 @@ class _AddEditableScreenState extends State<AddEditableScreen> {
       _isLoading = true;
     });
     final preprocessing =
-        await Provider.of<Settings>(context, listen: false).preprocessing;
+        Provider.of<Settings>(context, listen: false).preprocessing;
     try {
       final result =
           await HTTPHelper.sendPostImageRequest(_base64Image, preprocessing);
