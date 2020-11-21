@@ -4,15 +4,8 @@ import 'package:provider/provider.dart';
 import '../widgets/app_drawer.dart';
 import '../providers/settings.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends StatelessWidget {
   static const routeName = '/settings';
-
-  @override
-  _SettingsScreenState createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  var _preprocess = false;
 
   Widget _buildSwitchListTile(
     String title,
@@ -28,12 +21,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       onChanged: updateValue,
     );
-  }
-
-  Future<void> initializeData() async {
-    final settingsProvider = Provider.of<Settings>(context, listen: false);
-    await settingsProvider.fetchAndSetSettings();
-    _preprocess = await settingsProvider.preprocessing;
   }
 
   @override
@@ -52,33 +39,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: Theme.of(context).textTheme.headline6,
             ),
           ),
-          FutureBuilder(
-            future: initializeData(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-              return Expanded(
-                child: ListView(
-                  children: [
-                    _buildSwitchListTile(
-                      'Preprocessing',
-                      'Pre-process image before performing the text extraction',
-                      _preprocess,
-                      (newValue) {
-                        Provider.of<Settings>(context, listen: false)
-                            .setPreprocessing(newValue);
-                        setState(() {
-                          _preprocess = newValue;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
+          Consumer<Settings>(
+            builder: (ctx, settings, child) => Expanded(
+              child: ListView(
+                children: [
+                  _buildSwitchListTile(
+                    'Preprocessing',
+                    'Pre-process image before performing the text extraction',
+                    settings.preprocessing,
+                    (newValue) {
+                      settings.togglePreprocessing();
+                    },
+                  ),
+                  _buildSwitchListTile(
+                    'Dark Theme',
+                    'Change the application theme',
+                    settings.darkTheme,
+                    (newValue) {
+                      settings.toggleDarkTheme();
+                    },
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: const Text('Change font size:'),
+                      ),
+                      Slider(
+                        value: settings.fontSizeFactor,
+                        min: 1,
+                        max: 1.4,
+                        divisions: 5,
+                        label: null,
+                        activeColor:
+                            Theme.of(context).accentColor.withOpacity(0.8),
+                        onChanged: (value) {
+                          settings.setFontSize(value);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

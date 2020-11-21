@@ -28,20 +28,54 @@ class App extends StatelessWidget {
           create: (ctx) => Editables(),
         ),
       ],
-      child: MaterialApp(
-        theme: ThemeData(
-          primarySwatch: Colors.indigo,
-          accentColor: Colors.deepOrange,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
+      child: Consumer<Settings>(
+        builder: (ctx, settings, child) => MaterialApp(
+          theme: ThemeData(
+            primarySwatch: Colors.indigo,
+            accentColor: Colors.deepOrange,
+            visualDensity: VisualDensity.adaptivePlatformDensity,
+            textTheme: Theme.of(context).textTheme.apply(
+                  fontSizeFactor: settings.fontSizeFactor,
+                ),
+            brightness: settings.darkTheme ? Brightness.dark : Brightness.light,
+          ),
+          home: HomeScreen(),
+          routes: {
+            SettingsScreen.routeName: (ctx) => SettingsScreen(),
+            AddEditableScreen.routeName: (ctx) => AddEditableScreen(),
+            EditEditableScreen.routeName: (ctx) => EditEditableScreen(),
+          },
+          debugShowCheckedModeBanner: false,
         ),
-        home: HomeScreen(),
-        routes: {
-          SettingsScreen.routeName: (ctx) => SettingsScreen(),
-          AddEditableScreen.routeName: (ctx) => AddEditableScreen(),
-          EditEditableScreen.routeName: (ctx) => EditEditableScreen(),
-        },
-        debugShowCheckedModeBanner: false,
       ),
     );
   }
 }
+
+/*
+child: FutureBuilder(
+        future:
+            Provider.of<Settings>(context, listen: false).fetchAndSetSettings(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+          return MaterialApp(
+            theme: ThemeData(
+              primarySwatch: Colors.indigo,
+              accentColor: Colors.deepOrange,
+              visualDensity: VisualDensity.adaptivePlatformDensity,
+            ),
+            home: HomeScreen(),
+            routes: {
+              SettingsScreen.routeName: (ctx) => SettingsScreen(),
+              AddEditableScreen.routeName: (ctx) => AddEditableScreen(),
+              EditEditableScreen.routeName: (ctx) => EditEditableScreen(),
+            },
+            debugShowCheckedModeBanner: false,
+          );
+        },
+      ),
+      */

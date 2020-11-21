@@ -104,7 +104,8 @@ class EditableItem extends StatelessWidget {
                   child: Text(
                     text,
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize:
+                          Theme.of(context).textTheme.headline6.fontSize * 0.8,
                     ),
                   ),
                 ),
