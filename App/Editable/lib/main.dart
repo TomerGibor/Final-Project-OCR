@@ -30,15 +30,8 @@ class App extends StatelessWidget {
       ],
       child: Consumer<Settings>(
         builder: (ctx, settings, child) => MaterialApp(
-          theme: ThemeData(
-            primarySwatch: Colors.indigo,
-            accentColor: Colors.deepOrange,
-            visualDensity: VisualDensity.adaptivePlatformDensity,
-            textTheme: Theme.of(context).textTheme.apply(
-                  fontSizeFactor: settings.fontSizeFactor,
-                ),
-            brightness: settings.darkTheme ? Brightness.dark : Brightness.light,
-          ),
+          theme: Themes.themeData(
+              ctx, settings.darkTheme, settings.fontSizeFactor),
           home: HomeScreen(),
           routes: {
             SettingsScreen.routeName: (ctx) => SettingsScreen(),

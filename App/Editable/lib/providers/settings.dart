@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Settings with ChangeNotifier {
@@ -61,5 +61,26 @@ class Settings with ChangeNotifier {
     _prefs.setBool(preprocessingKey, _preprocessing);
     _prefs.setBool(darkThemeKey, _darkTheme);
     _prefs.setDouble(fontSizeFactorKey, _fontSizeFactor);
+  }
+}
+
+class Themes {
+  static ThemeData themeData(
+      BuildContext context, bool isDarkTheme, double fontSizeFactor) {
+    return ThemeData(
+      primaryColor: isDarkTheme ? Colors.teal : Colors.indigo,
+      accentColor: isDarkTheme ? Colors.indigo : Colors.deepOrange,
+      cardColor: isDarkTheme ? Colors.grey[900] : Colors.white,
+      brightness: isDarkTheme ? Brightness.dark : Brightness.light,
+      buttonTheme: Theme.of(context).buttonTheme.copyWith(
+            colorScheme: isDarkTheme ? ColorScheme.dark() : ColorScheme.light(),
+          ),
+      visualDensity: VisualDensity.adaptivePlatformDensity,
+      textTheme: Theme.of(context).textTheme.apply(
+            fontSizeFactor: fontSizeFactor,
+            bodyColor: isDarkTheme ? Colors.white : Colors.black,
+            displayColor: isDarkTheme ? Colors.white70 : Colors.black54,
+          ),
+    );
   }
 }
