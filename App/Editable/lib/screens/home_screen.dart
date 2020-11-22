@@ -10,8 +10,7 @@ class HomeScreen extends StatelessWidget {
   void _navigateToAddItemScreen(BuildContext context) {
     Navigator.of(context).pushNamed(AddEditableScreen.routeName).then((result) {
       if (result != null) {
-        Provider.of<Editables>(context, listen: false)
-            .addEditable(result);
+        Provider.of<Editables>(context, listen: false).addEditable(result);
       }
     });
   }
@@ -40,12 +39,13 @@ class HomeScreen extends StatelessWidget {
           } else {
             return Consumer<Editables>(
               child: const Center(
-                child:
-                    const Text('You have no editables yet, start adding some!'),
+                child: const Text(
+                  'You have no editables yet, start adding some!',
+                  textAlign: TextAlign.center,
+                ),
               ),
               builder: (ctx, editablesData, ch) {
-                final editablesReversed =
-                    editablesData.items.reversed.toList();
+                final editablesReversed = editablesData.items.reversed.toList();
                 return editablesReversed.length == 0
                     ? ch
                     : ListView.builder(

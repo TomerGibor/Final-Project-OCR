@@ -59,26 +59,28 @@ class SettingsScreen extends StatelessWidget {
                       settings.toggleDarkTheme();
                     },
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: const Text('Change font size:'),
+                  FittedBox(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Change font size:'),
+                          Slider(
+                            value: settings.fontSizeFactor,
+                            min: 1,
+                            max: 1.4,
+                            divisions: 5,
+                            label: null,
+                            activeColor:
+                                Theme.of(context).accentColor.withOpacity(0.8),
+                            onChanged: (value) {
+                              settings.setFontSize(value);
+                            },
+                          ),
+                        ],
                       ),
-                      Slider(
-                        value: settings.fontSizeFactor,
-                        min: 1,
-                        max: 1.4,
-                        divisions: 5,
-                        label: null,
-                        activeColor:
-                            Theme.of(context).accentColor.withOpacity(0.8),
-                        onChanged: (value) {
-                          settings.setFontSize(value);
-                        },
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),

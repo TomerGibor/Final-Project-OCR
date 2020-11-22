@@ -69,7 +69,7 @@ class Themes {
       BuildContext context, bool isDarkTheme, double fontSizeFactor) {
     return ThemeData(
       primaryColor: isDarkTheme ? Colors.teal : Colors.indigo,
-      accentColor: isDarkTheme ? Colors.indigo : Colors.deepOrange,
+      accentColor: Colors.deepOrange,
       cardColor: isDarkTheme ? Colors.grey[900] : Colors.white,
       brightness: isDarkTheme ? Brightness.dark : Brightness.light,
       buttonTheme: Theme.of(context).buttonTheme.copyWith(

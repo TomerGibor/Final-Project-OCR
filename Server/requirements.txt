@@ -10,4 +10,5 @@ opencv-python
 fastapi
 uvicorn
 pyspellchecker
+python-docx
 

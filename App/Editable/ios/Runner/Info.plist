@@ -22,7 +22,12 @@
 	<string>We need access to your gallery in order to process the Editable</string>
 	<key>NSCameraUsageDescription</key>
 	<string>We need to take a picture in order to process the Editable</string>
-	
+	<key>NSAllowsArbitraryLoads</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:open_file/open_file.dart';
 import 'package:share/share.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'error_dialog.dart';
 import '../providers/editables.dart';
 import '../screens/edit_editable_screen.dart';
-import 'error_dialog.dart';
+import '../helpers/file_helper.dart';
+import '../helpers/http_helper.dart';
 
 class EditableItem extends StatelessWidget {
   final String id;
@@ -40,6 +43,25 @@ class EditableItem extends StatelessWidget {
         ),
       );
     });
+  }
+
+  void _getDocx(BuildContext context) async {
+    try {
+      final file = await HttpHelper.sendGetDocxFromText(this.text);
+      OpenFile.open(file.path);
+    } on PermissionDeniedException catch (err) {
+      Scaffold.of(context).hideCurrentSnackBar();
+      Scaffold.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+              'We need access to your files in order to download the file!'),
+          duration: const Duration(seconds: 4),
+          backgroundColor: Theme.of(context).errorColor,
+        ),
+      );
+    } catch (err) {
+      showErrorAlertDialog(context);
+    }
   }
 
   @override
@@ -159,7 +181,7 @@ class EditableItem extends StatelessWidget {
                       AssetImage('assets/images/docx_icon.png'),
                       color: Theme.of(context).primaryColor,
                     ),
-                    onPressed: () {},
+                    onPressed: () => _getDocx(context),
                   ),
                 ],
               )

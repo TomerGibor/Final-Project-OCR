@@ -6,9 +6,11 @@ from typing import Dict
 import numpy as np
 import PIL.Image
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from docx import Document
+from docx.shared import Pt
 
 # from ocr import text_from_image
 
@@ -35,12 +37,27 @@ async def image_to_text(data: Data) -> Dict[str, str]:
     i += 1
     return {'result': f'test{i}'}
 
-
     # np_image = np.asarray(pil_image)
     #
     # text = text_from_image(np_image)
     #
     # return {'prediction': text}  # fastapi auto converts dict into JSON
+
+
+@app.get('/text_to_docx/{text}')
+async def text_to_docx(text: str):
+    document = Document()
+    paragraph = document.add_paragraph(text)
+    style = document.styles['Normal']
+    font = style.font
+    font.name = 'Calibri'
+    font.size = Pt(12)
+    paragraph.style = document.styles['Normal']
+
+    stream = io.BytesIO()
+    document.save(stream)
+    return Response(content=stream.getvalue(), media_type='application/vnd.openxmlformats'
+                                                          '-officedocument.wordprocessingml.document')
 
 
 if __name__ == '__main__':
