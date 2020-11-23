@@ -5,7 +5,7 @@ import 'package:Editable/helpers/file_helper.dart';
 import 'package:http/http.dart' as http;
 
 class HttpHelper {
-  static const baseUrl = '192.168.0.112:8080';
+  static const baseUrl = 'editable-server.herokuapp.com';
 
   static Future<String> sendPostImageRequest(
     String b64Image,
@@ -23,7 +23,6 @@ class HttpHelper {
             HttpHeaders.contentTypeHeader: ContentType.json.mimeType,
           });
       final respText = json.decode(response.body)['result'];
-      print(response.body);
       return respText;
     } catch (error) {
       print('################ERROR################');

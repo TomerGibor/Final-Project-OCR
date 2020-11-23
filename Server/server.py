@@ -1,5 +1,6 @@
 import base64
 import io
+import os
 from datetime import datetime
 from typing import Dict
 
@@ -61,4 +62,4 @@ async def text_to_docx(text: str):
 
 
 if __name__ == '__main__':
-    uvicorn.run('server:app', host='0.0.0.0', port=8080)
+    uvicorn.run('server:app', host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
