@@ -57,8 +57,9 @@ async def text_to_docx(text: str):
 
     stream = io.BytesIO()
     document.save(stream)
-    return Response(content=stream.getvalue(), media_type='application/vnd.openxmlformats'
-                                                          '-officedocument.wordprocessingml.document')
+    return Response(content=stream.getvalue(),
+                    media_type='application/vnd.openxmlformats'
+                               '-officedocument.wordprocessingml.document')
 
 
 if __name__ == '__main__':

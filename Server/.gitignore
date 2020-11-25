@@ -1,0 +1,9 @@
+/models/
+/logs/
+/venv/
+/tests/
+/.idea/
+/__pycache__/
+
+# unfinished files, still a work in progress
+./train_models.py
