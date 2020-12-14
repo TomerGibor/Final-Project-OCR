@@ -1,3 +1,4 @@
+"""Module for defining application-level constants."""
 import string
 
 IMAGE_SIZE = (64, 64)
@@ -12,3 +13,6 @@ VALIDATION_PATH = 'D:\\Training Data\\Training Dataset\\non_filtered_validation'
 TRAIN_MERGED_PATH = 'D:\\Training Data\\Training Dataset\\non_filtered_training_merged'
 VALIDATION_MERGED_PATH = 'D:\\Training Data\\Training Dataset\\non_filtered_validation_merged'
 DATETIME_FORMAT = '%d-%b-%Y-%H%M'
+DOCX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+CHARACTER_PADDING = 16
+SPACE = 'SPACE'

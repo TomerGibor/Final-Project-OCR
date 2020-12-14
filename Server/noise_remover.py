@@ -1,5 +1,5 @@
 """
-Module used to train the noise remover model and save it to HDF5 format.
+Module used to train the noise remover model,save it to HDF5 format, and later use it.
 """
 
 import glob

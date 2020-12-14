@@ -16,12 +16,10 @@ ocr_model.build_model()
 ocr_model.train_model()
 ocr_model.save_model()
 
-# # initialize denoising model
-# denoiser = DenoisingAutoencoder()
-# # build and train the autoencoder
-# denoiser.build_model()
-# denoiser.train_model()
-# # save the model
-# denoiser.save_model()
-
-
+# initialize denoising model
+denoiser = DenoisingAutoencoder()
+# build and train the autoencoder
+denoiser.build_model()
+denoiser.train_model()
+# save the model
+denoiser.save_model()

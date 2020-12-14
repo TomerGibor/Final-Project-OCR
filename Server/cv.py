@@ -1,17 +1,16 @@
 from collections import namedtuple
-from typing import Tuple, List
-from numbers import Real
+from typing import Tuple, List, Union
 
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 
-# set color palette to gray
-plt.set_cmap('gray')
+import consts
+
 Rect = namedtuple('Rect', 'x y w h')
 
 
-def get_median_dimensions(rects: List[Rect]) -> Tuple[Real, Real]:
+def get_median_dimensions(rects: List[Rect]) -> Tuple[float, float]:
     """Get the 3/4 median of the dimensions."""
     heights = [rect.h for rect in rects]
     widths = [rect.w for rect in rects]
@@ -26,10 +25,18 @@ def get_median_dimensions(rects: List[Rect]) -> Tuple[Real, Real]:
 
 
 def filter_contour_rects(contour_rects: List[Tuple[np.ndarray, Rect]],
-                         median_area: Real) -> List[Tuple[np.ndarray, Rect]]:
+                         median_area: float) -> List[Tuple[np.ndarray, Rect]]:
     """
     Remove tiny or big rects and their matching contours,
-    based on the median area.
+    based on their area and the median area.
+
+    Args:
+        contour_rects (List[Tuple[np.ndarray, Rect]]): A list of tuples
+          containing the contour and its corresponding bounding rectangle.
+        median_area (float): The median area of a rect.
+    Returns:
+        List[Tuple[np.ndarray, Rect]]: A list of tuples of the filtered
+          contours and their corresponding bounding rectangles.
     """
 
     filtered_contour_rects = []
@@ -46,11 +53,19 @@ def filter_contour_rects(contour_rects: List[Tuple[np.ndarray, Rect]],
 
 
 def sort_rects(contour_rects: List[Tuple[np.ndarray, Rect]],
-               median_height: Real) -> List[Tuple[np.ndarray, Rect]]:
+               median_height: float) -> List[Tuple[np.ndarray, Rect]]:
     """
     Sort the contours and rects together, by forming liens of characters based
     on change in vertical distance between two characters. After forming lines,
     sort each line by the x position of its rects.
+
+    Args:
+        contour_rects (List[Tuple[np.ndarray, Rect]]): A list of tuples
+          containing the contour and its corresponding bounding rectangle.
+        median_height (float): The median height of a rect.
+    Returns:
+        List[Tuple[np.ndarray, Rect]]: A list of tuples of the sorted
+          contours and their corresponding bounding rectangles.
     """
     # firstly, sort the contours by their rect's y position
     sorted_by_y = sorted(contour_rects, key=lambda cr: cr[1].y)
@@ -76,19 +91,27 @@ def sort_rects(contour_rects: List[Tuple[np.ndarray, Rect]],
 
 
 def detect_spaces(contour_rects: List[Tuple[np.ndarray, Rect]],
-                  median_width: Real) -> List[Tuple[np.ndarray, Rect]]:
+                  median_width: float) -> List[Union[Tuple[str, str],
+                                                     Tuple[np.ndarray, Rect]]]:
     """
     Detect spaces between sorted contours, by measuring the horizontal
     distance between adjacent contours, and comparing it to the median width.
+
+    Args:
+        contour_rects (List[Tuple[np.ndarray, Rect]]): A list of tuples
+          containing the contour and its corresponding bounding rectangle.
+        median_width (float): The median width of a rect.
     """
     with_spaces = []
     horizontal_distance = lambda r1, r2: r2.x - (r1.x + r1.w)
     for (contour1, rect1), (contour2, rect2) in zip(contour_rects[:-1], contour_rects[1:]):
         with_spaces.append((contour1, rect1))
-        if horizontal_distance(rect1, rect2) > median_width / 2 \
-                or horizontal_distance(rect1, rect2) < -3 * median_width:
-            with_spaces.append(('SPACE', 'SPACE'))
-    with_spaces.append((contour2, rect2))
+        if horizontal_distance(rect1, rect2) > median_width / 2.5 \
+                or horizontal_distance(rect1, rect2) < -2 * median_width:
+            with_spaces.append((consts.SPACE, consts.SPACE))
+    if len(contour_rects) > 1:
+        with_spaces.append((contour2, rect2))
+
     return with_spaces
 
 
@@ -97,10 +120,14 @@ def remove_enclosing_rects(contour_rects: List[Tuple[np.ndarray, Rect]]) \
     """
     Remove rects and their corresponding contours, if one rect is enclosed
     by another. Always removing the enclosed ones.
+
+    Args:
+        contour_rects (List[Tuple[np.ndarray, Rect]]): A list of tuples
+          containing the contour and its corresponding bounding rectangle.
     """
     filtered = []
     skip = False
-    # function to determine if two one rect encloses the other
+    # function to determine if one rect encloses the other
     is_enclosing = lambda r1, r2: r2.x + r2.w < r1.x + r1.w and r2.y + r2.h < r1.y + r1.h
     # loop over the contour rects in pairs
     for (contour1, rect1), (contour2, rect2) in zip(contour_rects[:-1], contour_rects[1:]):
@@ -113,15 +140,31 @@ def remove_enclosing_rects(contour_rects: List[Tuple[np.ndarray, Rect]]) \
             # if not enclosing, keep contour
             filtered.append((contour1, rect1))
         skip = False
-    if not skip:
+    if not skip and len(contour_rects) > 1:
         filtered.append((contour2, rect2))
 
     return filtered
 
 
-def get_contours_bounding_rects(img: np.ndarray) -> List[Rect]:
+def get_letters_bounding_rects(img: np.ndarray) -> List[Union[Rect, str]]:
+    """
+    Get the enclosing rects of the letters in the image, by sorted order.
+    Rects are filtered based on their, and other rect's area. The
+    returned rects contain spaces, represented by `consts.SPACE`,
+    between each word it the text, which are also calculated dynamically
+    based on the image resolution.
+
+    Args:
+        img (np.ndarray): The source image.
+
+    Returns:
+       List[Union[Rect, str]]: A list of the bounding rectangles and
+         spaces, represented by `consts.SPACE`, separating words.
+    """
     img = img.copy()  # np arrays are mutable and are passed by reference
-    # convert to only black and white
+
+    # blur image ane threshold it
+    img = cv2.GaussianBlur(img, (3, 3), 0)
     _, img = cv2.threshold(img, 150, 255, cv2.THRESH_OTSU)
     plt.imshow(img)
     plt.show()
@@ -135,21 +178,17 @@ def get_contours_bounding_rects(img: np.ndarray) -> List[Rect]:
     contour_rects = filter_contour_rects(contour_rects, median_width * median_height)
     contour_rects = sort_rects(contour_rects, median_height)
     contour_rects = remove_enclosing_rects(contour_rects)
-    # show_rects(original, rects)
+    # ---------------- FOR DEBUGGING ---------------
+    img2 = cv2.cvtColor(img.copy(), cv2.COLOR_GRAY2RGB)
+    for i in rects:
+        img2 = cv2.rectangle(img2, (i.x, i.y), (i.x+i.w, i.y+i.h), (0, 255, 0), 2)
+    plt.imshow(img2)
+    plt.show()
+    # ----------------------------------------------
+
     with_spaces = detect_spaces(contour_rects, median_width)
 
     # unpack contours and rects
     contours, rects = zip(*with_spaces)
 
     return rects
-
-# def show_rects(img, rects):
-#     for rect in rects:
-#         letter = img[rect.y:rect.y + rect.h, rect.x:rect.x + rect.w]
-#         letter = add_padding(letter)
-#
-#         # resize the image to be the size defined in consts, and rescale
-#         # pixel values to be between 0.0 and 1.0
-#         scaled = cv2.resize(letter, consts.IMAGE_SIZE) / 255
-#         plt.imshow(denoised)
-#         plt.show()

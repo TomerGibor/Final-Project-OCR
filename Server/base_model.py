@@ -1,3 +1,4 @@
+"""Module used to define the base model and other related functions and errors."""
 from abc import ABCMeta, abstractmethod
 from functools import wraps
 
@@ -22,7 +23,7 @@ class BaseTFModel(metaclass=ABCSingletonMeta):
 
     def __init__(self):
         self._model: Sequential = None
-        self._model_loaded: bool = False
+        self._model_loaded = False
         self._model_built = False
 
     @abstractmethod

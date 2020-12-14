@@ -1,3 +1,6 @@
+"""
+Module for extracting the text from an image using optical-character-recognition.
+"""
 import string
 
 import PIL
@@ -9,7 +12,7 @@ from spellchecker import SpellChecker
 import consts
 from ocr_model import OCRModel
 from noise_remover import DenoisingAutoencoder
-from cv import get_contours_bounding_rects
+from cv import get_letters_bounding_rects
 
 # load the models
 model = OCRModel()
@@ -19,67 +22,72 @@ denoiser.load_model()
 
 # set color palette to gray
 plt.set_cmap('gray')
-PADDING = 16
 spellchecker = SpellChecker()
 common_mistakes = {
     'ls': 'is',
     'lt': 'it',
     'l': 'i',
+    'ln': 'in',
+    'lts': 'its',
+    'll': 'it',
 }
 
 
 def text_from_image(img: np.ndarray) -> str:
-    """Extract the text from an image."""
+    """
+    Extract the text from an image. Works best if the image is preprocessed
+    before applying the model.
 
-    rects = get_contours_bounding_rects(img)
+    Args:
+        img (np.ndarray): The image (preprocessed).
+
+    Returns:
+        str: The extracted text.
+    """
+
+    rects = get_letters_bounding_rects(img)
+
     text = ''
     first_character_of_word = True
-    is_word_letters = True
+    is_word_letters = True  # whether the word starts with a letter or a number
+
     for rect in rects:
-        if rect == 'SPACE':
+        if rect == consts.SPACE:
             text += ' '
             first_character_of_word = True
             is_word_letters = True
             continue
+
         # crop the bounding rect of the contour from the original image
         character = img[rect.y:rect.y + rect.h, rect.x:rect.x + rect.w]
+        # add white padding around the character and center it in the frame
         character = add_padding(character)
 
-        # resize the image to be the size defined in consts, and rescale
-        # pixel values to be between 0.0 and 1.0
+        # resize the image, and rescale pixel values to be between 0.0 and 1.0
         scaled = cv2.resize(character, consts.IMAGE_SIZE) / 255
 
         denoised = denoiser.denoise_image(scaled)
-        # plt.imshow(denoised)
-        # plt.show()
+
+        # predict the character
         prediction = model.predict(denoised)
         predicted_letter = consts.MERGED_CLASSES[np.argmax(prediction)]
+
         if first_character_of_word and predicted_letter in string.digits:
             is_word_letters = False
-        if not first_character_of_word:
-            if is_word_letters and predicted_letter == '0':
-                predicted_letter = 'o'
-            elif is_word_letters and predicted_letter == '1':
-                # TODO: i or l
-                predicted_letter = 'i'
-        if not is_word_letters:
-            if predicted_letter == 'z':
-                predicted_letter = '2'
-            if predicted_letter == 'i' or predicted_letter == 'l':
-                predicted_letter = '1'
+        predicted_letter = change_to_similar_character_if_needed(
+            predicted_letter, first_character_of_word, is_word_letters
+        )
+
         text += predicted_letter
         first_character_of_word = False
-    words = text.split(' ')
-    words = [common_mistakes.get(word, word) for word in words]
-    corrected_words = []
-    for word in words:
-        corrected_words.append(spellchecker.correction(word))
-    print(' '.join(corrected_words))
-    return ' '.join(corrected_words)
+
+    return perform_spellchecking(text)
 
 
-def add_padding(img):
-    """Add white space padding to make the image a square."""
+def add_padding(img: np.ndarray) -> np.ndarray:
+    """Add white space padding to make the image a square, and add
+    padding around the image.
+    """
     width, height = img.shape
     max_dim = max(width, height)
 
@@ -93,9 +101,53 @@ def add_padding(img):
 
     # add extra padding from all sides so that the image will not touch
     # the edge of the array frame
-    return np.pad(temp, PADDING, constant_values=255)
+    return np.pad(temp, consts.CHARACTER_PADDING, constant_values=255)
 
 
-image = np.asarray(PIL.Image.open('tests\\test9.png').convert('L'))
+def change_to_similar_character_if_needed(predicted_letter: str,
+                                          first_character_of_word: bool,
+                                          is_word_letters: bool) -> str:
+    """
+    Alter the predicted character to a character that looks similar, from
+    letters to numbers or the other way around. In case the character is
+    positioned in the middle of a word, replace it with a number that is
+    visually similar (the model is inaccurate at times), or if we're at
+    the middle of a number, replace the letter with a number.
+    """
+    if not first_character_of_word:
+        # the word is made of letters
+        if is_word_letters and predicted_letter == '0':
+            predicted_letter = 'o'
+        elif is_word_letters and predicted_letter == '1':
+            predicted_letter = 'i'
+        elif is_word_letters and predicted_letter == '5':
+            predicted_letter = 's'
 
-text_from_image(image)
+    if not is_word_letters:
+        # should be a number
+        if predicted_letter == 'z':
+            predicted_letter = '2'
+        if predicted_letter == 'i' or predicted_letter == 'l':
+            predicted_letter = '1'
+
+    return predicted_letter
+
+
+def perform_spellchecking(text: str) -> str:
+    """
+    Fix spelling error which may be caused by the model predicting
+    the wrong character, by replacing misspelled words, with other words
+    which are lexicographically close, and are used often.
+    """
+    words = text.split(' ')
+    words = [common_mistakes.get(word, word) for word in words]
+    corrected_words = []
+    for word in words:
+        corrected_words.append(spellchecker.correction(word))
+    print(' '.join(corrected_words))
+    return ' '.join(corrected_words)
+
+#
+# image = np.asarray(PIL.Image.open('tests\\test10.png').convert('L'))
+#
+# text_from_image(image)
