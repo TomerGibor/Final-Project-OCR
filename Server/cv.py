@@ -106,7 +106,7 @@ def detect_spaces(contour_rects: List[Tuple[np.ndarray, Rect]],
     horizontal_distance = lambda r1, r2: r2.x - (r1.x + r1.w)
     for (contour1, rect1), (contour2, rect2) in zip(contour_rects[:-1], contour_rects[1:]):
         with_spaces.append((contour1, rect1))
-        if horizontal_distance(rect1, rect2) > median_width / 2.5 \
+        if horizontal_distance(rect1, rect2) > median_width / 2.75 \
                 or horizontal_distance(rect1, rect2) < -2 * median_width:
             with_spaces.append((consts.SPACE, consts.SPACE))
     if len(contour_rects) > 1:

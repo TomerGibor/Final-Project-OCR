@@ -16,3 +16,4 @@ DATETIME_FORMAT = '%d-%b-%Y-%H%M'
 DOCX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 CHARACTER_PADDING = 16
 SPACE = 'SPACE'
+INFINITY = 2**64

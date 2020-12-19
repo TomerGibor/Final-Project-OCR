@@ -2,7 +2,7 @@
 Module for preprocessing tha images, in order the get them to work best
 with the character-cutting and the models.
 """
-from typing import Tuple, List
+from typing import Tuple
 
 import numpy as np
 import cv2
@@ -10,34 +10,9 @@ import matplotlib.pyplot as plt
 from scipy.spatial import distance
 from PIL import Image, ImageOps
 
+from hough_rect import find_hough_rect, rect_area
+
 plt.set_cmap('gray')
-
-
-def get_roi(contours: List[np.ndarray]) -> np.ndarray:
-    """
-    Get the region-of-interest from the list of contours. Get the
-    largest contours by area, and then check if either one is a rectangle,
-    if none of the contours match said description, return None.
-
-    Args:
-        contours (List[np.ndarray]): The contours found by openCV.
-    Returns:
-        np.ndarray: The contour which serves as the region-of-interest of the image.
-    """
-    # get the 5 contours with the largest area
-    contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
-    roi = None
-    # loop over the contours
-    for cnt in contours:
-        # approximate the contour
-        perimeter = cv2.arcLength(cnt, True)
-        approx = cv2.approxPolyDP(cnt, 0.02 * perimeter, True)
-        # if the approximated contour has four points, then assume it is the
-        # desired area of text (ROI)
-        if len(approx) == 4:
-            roi = approx
-            break
-    return roi
 
 
 def preprocess_image(img: np.ndarray) -> np.ndarray:
@@ -51,23 +26,16 @@ def preprocess_image(img: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: The preprocessed image.
     """
-
     original = img.copy()
 
-    img = cv2.GaussianBlur(img, (5, 5), 0)
-    edged = cv2.Canny(img, 50, 250)
-    plt.imshow(edged)
-    plt.show()
-
-    contours, _ = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    if (roi := get_roi(contours)) is None:
-        # can't process image, no ROI found, return original image,
-        # after being light preprocessed
+    if (roi := find_hough_rect(img)) is None \
+            or rect_area(roi) < 0.1 * img.shape[0] * img.shape[1]:
+        # can't process image, no ROI found or rect is too small, return
+        # original image, after being light preprocessed
         return light_preprocessing(original)
 
     # rotate the image and transform it around the ROI
-    warped = four_point_transform(original, roi.reshape(4, 2))
+    warped = four_point_transform(original, roi)
 
     # final steps of preprocessing - threshing and eroding
     _, threshed = cv2.threshold(warped, 255 // 2, 255, cv2.THRESH_OTSU)
@@ -77,34 +45,9 @@ def preprocess_image(img: np.ndarray) -> np.ndarray:
     return eroded
 
 
-def order_points(pts):
-    """
-    Order the points of the region-of-interest according to the following
-    order: top-left, top-right, bottom-right, bottom-left.
-    """
-    # prepare an array to hold the ordered points
-    rect = np.zeros((4, 2), dtype=np.float32)
-
-    # the top-left point will have the smallest sum, whereas
-    # the bottom-right point will have the largest sum
-    s = pts.sum(axis=1)
-    rect[0] = pts[np.argmin(s)]
-    rect[2] = pts[np.argmax(s)]
-
-    # compute the difference between the points, the
-    # top-right point will have the smallest difference,
-    # whereas the bottom-left will have the largest difference
-    diff = np.diff(pts, axis=1)
-    rect[1] = pts[np.argmin(diff)]
-    rect[3] = pts[np.argmax(diff)]
-
-    return rect
-
-
-def four_point_transform(img, pts):
+def four_point_transform(img: np.ndarray, rect: np.ndarray) -> np.ndarray:
     """Warp the image around it's region-of-interest."""
     # obtain a consistent order of the points
-    rect = order_points(pts)
     width, height = calc_dimensions(rect)
 
     dst = np.array([
@@ -119,7 +62,7 @@ def four_point_transform(img, pts):
     return warped
 
 
-def calc_dimensions(ordered_pts) -> Tuple[int, int]:
+def calc_dimensions(ordered_pts: np.ndarray) -> Tuple[int, int]:
     """Calculate the dimensions of the new warped image - width and height."""
 
     (tl, tr, br, bl) = ordered_pts
@@ -144,8 +87,8 @@ def light_preprocessing(img: np.ndarray) -> np.ndarray:
     _, threshed = cv2.threshold(img, 255 // 2, 255, cv2.THRESH_OTSU)
     return threshed
 
-#
-# image = Image.open('tests\\test11.png').convert('L')
+
+# image = Image.open('tests/preprocessing/test7.png').convert('L')
 # image = np.asarray(ImageOps.exif_transpose(image))
 #
 # preprocess_image(image)
