@@ -57,7 +57,7 @@ async def invalid_b64_str_handler(request: Request,
 
 @app.post('/image_to_text')
 async def image_to_text(data: Data) -> Dict[str, str]:
-    """Extract the text from an image, and preprocessing it if requested."""
+    """Extract the text from an image, and preprocess it if requested."""
     try:
         base64_decoded = base64.b64decode(data.b64image)
     except binascii.Error:
