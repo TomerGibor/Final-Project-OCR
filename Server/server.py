@@ -5,12 +5,14 @@ answers their requests.
 import base64
 import io
 import os
+import binascii
 from typing import Dict
 
 import numpy as np
 import PIL.Image
 import uvicorn
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from docx import Document
 from docx.shared import Pt
@@ -27,10 +29,44 @@ class Data(BaseModel):
     preprocessing: bool
 
 
+class InvalidBase64StringError(Exception):
+    """Exception raised if base64 decoding failed."""
+
+
+class InvalidImageStringError(Exception):
+    """Exception raised when an image file cannot be identified from decoded base64."""
+
+
+@app.exception_handler(InvalidBase64StringError)
+async def invalid_b64_str_handler(request: Request,
+                                  exc: InvalidBase64StringError) -> JSONResponse:
+    return JSONResponse(
+        status_code=400,
+        content={'message': 'The received base64 string is invalid.'},
+    )
+
+
+@app.exception_handler(InvalidImageStringError)
+async def invalid_b64_str_handler(request: Request,
+                                  exc: InvalidImageStringError) -> JSONResponse:
+    return JSONResponse(
+        status_code=400,
+        content={'message': 'Cannot identify image file from decoded base64 string.'},
+    )
+
+
 @app.post('/image_to_text')
 async def image_to_text(data: Data) -> Dict[str, str]:
-    base64_decoded = base64.b64decode(data.b64image)
-    pil_image = PIL.Image.open(io.BytesIO(base64_decoded)).convert('L')
+    """Extract the text from an image, and preprocessing it if requested."""
+    try:
+        base64_decoded = base64.b64decode(data.b64image)
+    except binascii.Error:
+        raise InvalidBase64StringError()
+    try:
+        pil_image = PIL.Image.open(io.BytesIO(base64_decoded)).convert('L')
+    except PIL.UnidentifiedImageError:
+        raise InvalidImageStringError()
+
     np_image = np.asarray(pil_image)
 
     if data.preprocessing:

@@ -1,5 +1,5 @@
 """
-Module for preprocessing tha images, in order the get them to work best
+Module for preprocessing the images, in order the get them to work best
 with the character-cutting and the models.
 """
 from typing import Tuple
@@ -88,7 +88,7 @@ def light_preprocessing(img: np.ndarray) -> np.ndarray:
     return threshed
 
 
-# image = Image.open('tests/preprocessing/test7.png').convert('L')
+# image = Image.open('tests/preprocessing/test2.png').convert('L')
 # image = np.asarray(ImageOps.exif_transpose(image))
 #
 # preprocess_image(image)

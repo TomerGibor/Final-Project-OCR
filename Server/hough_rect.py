@@ -1,3 +1,6 @@
+"""
+Module for finding a rectangle in the image, using Hough Line Transform.
+"""
 import itertools
 from typing import Tuple, List, Union
 
