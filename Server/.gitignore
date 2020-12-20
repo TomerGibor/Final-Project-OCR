@@ -6,4 +6,4 @@
 /__pycache__/
 
 # unfinished files, still a work in progress
-./train_model.py
+./test_model.py
