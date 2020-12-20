@@ -9,7 +9,7 @@ import binascii
 from typing import Dict
 
 import numpy as np
-import PIL.Image
+from PIL import Image, ImageOps, UnidentifiedImageError
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
@@ -63,10 +63,11 @@ async def image_to_text(data: Data) -> Dict[str, str]:
     except binascii.Error:
         raise InvalidBase64StringError()
     try:
-        pil_image = PIL.Image.open(io.BytesIO(base64_decoded)).convert('L')
-    except PIL.UnidentifiedImageError:
+        pil_image = Image.open(io.BytesIO(base64_decoded)).convert('L')
+    except UnidentifiedImageError:
         raise InvalidImageStringError()
 
+    pil_image = ImageOps.exif_transpose(pil_image)
     np_image = np.asarray(pil_image)
 
     if data.preprocessing:
