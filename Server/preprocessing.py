@@ -86,5 +86,3 @@ def light_preprocessing(img: np.ndarray) -> np.ndarray:
     """Perform light preprocessing of the image. Do only thresholding."""
     _, threshed = cv2.threshold(img, 255 // 2, 255, cv2.THRESH_OTSU)
     return threshed
-
-
