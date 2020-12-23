@@ -163,9 +163,8 @@ def get_letters_bounding_rects(img: np.ndarray) -> List[Union[Rect, str]]:
     """
     img = img.copy()  # np arrays are mutable and are passed by reference
 
-    # blur image ane threshold it
+    # blur the image
     img = cv2.GaussianBlur(img, (3, 3), 0)
-    _, img = cv2.threshold(img, 150, 255, cv2.THRESH_OTSU)
     plt.imshow(img)
     plt.show()
 

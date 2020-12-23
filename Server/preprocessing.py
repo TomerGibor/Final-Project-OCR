@@ -88,7 +88,3 @@ def light_preprocessing(img: np.ndarray) -> np.ndarray:
     return threshed
 
 
-# image = Image.open('tests/preprocessing/test2.png').convert('L')
-# image = np.asarray(ImageOps.exif_transpose(image))
-#
-# preprocess_image(image)

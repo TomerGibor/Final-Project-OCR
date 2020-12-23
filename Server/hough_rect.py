@@ -28,7 +28,7 @@ def find_hough_rect(img: np.ndarray) -> Union[None, np.ndarray]:
     lines = cv2.HoughLinesP(edged, rho=1, theta=np.pi / 180, threshold=150,
                             minLineLength=img.shape[0] // 10,
                             maxLineGap=img.shape[0] // 10)
-    lines = lines.squeeze()  # remove unnecessary dimension
+    lines = lines.reshape((len(lines), 4))  # remove unnecessary dimension
     # sort lines by their lengths, from longest to shortest
     sorted(lines,
            key=lambda l: distance.euclidean((l[0], l[1]), (l[2], l[3])),
@@ -49,64 +49,59 @@ def get_lines_intersect(lines: np.ndarray, img_width: int,
     four of them. Reduce mistakes by filtering close points and unwanted
     points of intersection.
     """
-    # get the line equation for each of the lines.
-    line_equations = []
-    for line in lines:
-        line_equations.append(get_line_equation(*line))
-    line_equations = filter_similar_line_equations(line_equations,
-                                                   min_b_dst=img_width // 5)
+    # get the line equation for each of the lines
+    line_equations = [get_line_equation(*line) for line in lines]
 
     pts = set()
     # get combination of two lines at a time
     for (m1, b1), (m2, b2) in itertools.combinations(line_equations, 2):
-        if m1 == m2:
-            # slopes equal, lines will never meet
-            continue
-        # if either line is vertical, get the x from the vertical line,
-        # and the y from the other line
-        if m1 == consts.INFINITY:
-            x = b1
-            y = m2 * x + b2
-        elif m2 == consts.INFINITY:
-            x = b2
-            y = m1 * x + b1
-        else:
-            x = (b2 - b1) / (m1 - m2)  # equation achieved by solving m1*x+b = m2*x+b2
-            y = m1 * x + b1
-        if x < 0 or x > img_width - 1 or y < 0 or y > img_height - 1:
-            # point of intersection out of bounds
-            continue
-
-        # obtain the angle between the two lines
-        alpha = np.arctan(np.abs((m1 - m2) / (1 + m1*m2)))
-        if alpha < np.pi / 16:
-            # if the angle is too small, then the two lines are almost
-            # parallel, discard point of intersection
-            continue
-        pts.add((int(x), int(y)))
+        if pt := get_intersection_point(m1, b2, m2, b2, img_width, img_height):
+            pts.add(pt)
     print(pts)
     pts = filter_close_pts(list(pts), min_pts_dst=img_width // 10)
     print(pts)
 
     if len(pts) != 4:
         return None
-    return list(pts)
+    return pts
 
 
-def filter_similar_line_equations(line_equations: List[Tuple[float, float]],
-                                  min_b_dst: int = 50) -> List[Tuple[float, float]]:
+def get_intersection_point(m1: float, b1: float, m2: float, b2: float,
+                           img_width: int, img_height: int)\
+        -> Union[None, Tuple[int, int]]:
     """
-    Remove line equations that are too close one another (usually caused by
-    duplicate lines or lines very close to each other).
+    Get the intersection points of two lines. If the point-of-intersection
+    is out of bounds or the angle between the two lines is too small,
+    returning None. Otherwise, returning the point.
     """
-    filtered_line_equations = line_equations[:]
+    if m1 == m2:
+        # slopes equal, lines will never meet
+        return None
+    # if either line is vertical, get the x from the vertical line,
+    # and the y from the other line
+    if m1 == consts.INFINITY:
+        x = b1
+        y = m2 * x + b2
+    elif m2 == consts.INFINITY:
+        x = b2
+        y = m1 * x + b1
+    else:
+        x = (b2 - b1) / (m1 - m2)  # equation achieved by solving m1*x+b = m2*x+b2
+        y = m1 * x + b1
+    if x < 0 or x > img_width - 1 or y < 0 or y > img_height - 1:
+        # point-of-intersection out of bounds
+        return None
 
-    for i, (m1, b1) in enumerate(line_equations):
-        for j, (m2, b2) in enumerate(line_equations[i + 1:]):
-            if np.abs(b1 - b2) < min_b_dst and (m2, b2) in filtered_line_equations:
-                filtered_line_equations.remove((m2, b2))
-
-    return filtered_line_equations
+    # obtain the angle between the two lines
+    if m1 * m2 == -1:
+        alpha = np.pi / 2  # lines are perpendicular, cannot divide by zero
+    else:
+        alpha = np.arctan(np.abs((m1 - m2) / (1 + m1 * m2)))
+    if alpha < np.pi / 16:
+        # if the angle is too small, then the two lines are almost
+        # parallel, discard point of intersection
+        return None
+    return int(x), int(y)
 
 
 def filter_close_pts(pts: List[Tuple[int, int]],
@@ -136,7 +131,7 @@ def get_line_equation(x1, y1, x2, y2) -> Tuple[float, float]:
     if x1 == x2:
         return consts.INFINITY, x1  # can't divide by zero, returning 'infinite' slope instead
     m = (y2 - y1) / (x2 - x1)  # slope = dy / dx
-    b = -m * x1 + y1  # derived from y-y1 = m(x-x1)
+    b = -m * x1 + y1  # derived from y-y1 = m(x-x1) and y=mx+b
     return m, b
 
 

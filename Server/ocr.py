@@ -146,8 +146,3 @@ def perform_spellchecking(text: str) -> str:
         corrected_words.append(spellchecker.correction(word))
     print(' '.join(corrected_words))
     return ' '.join(corrected_words)
-
-#
-# image = np.asarray(PIL.Image.open('tests\\test10.png').convert('L'))
-#
-# text_from_image(image)
