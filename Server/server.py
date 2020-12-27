@@ -6,7 +6,7 @@ import base64
 import io
 import os
 import binascii
-from typing import Dict
+from typing import List, Dict, Optional
 
 import numpy as np
 from PIL import Image, ImageOps, UnidentifiedImageError
@@ -19,14 +19,14 @@ from docx.shared import Pt
 
 import consts
 from ocr import text_from_image
-from preprocessing import preprocess_image, light_preprocessing
+from preprocessing import preprocess_image, find_page_points
 
 app = FastAPI()
 
 
 class Data(BaseModel):
     b64image: str
-    preprocessing: bool
+    points: Optional[List[Dict[str, int]]]
 
 
 class InvalidBase64StringError(Exception):
@@ -55,11 +55,10 @@ async def invalid_b64_str_handler(request: Request,
     )
 
 
-@app.post('/image_to_text')
-async def image_to_text(data: Data) -> Dict[str, str]:
-    """Extract the text from an image, and preprocess it if requested."""
+def decode_image(b64image: str) -> np.ndarray:
+    """Try decoding the image from base64 string, into numpy array."""
     try:
-        base64_decoded = base64.b64decode(data.b64image)
+        base64_decoded = base64.b64decode(b64image)
     except binascii.Error:
         raise InvalidBase64StringError()
     try:
@@ -69,14 +68,30 @@ async def image_to_text(data: Data) -> Dict[str, str]:
 
     pil_image = ImageOps.exif_transpose(pil_image)
     np_image = np.asarray(pil_image)
+    return np_image
 
-    if data.preprocessing:
-        preprocessed = preprocess_image(np_image)
+
+@app.post('/image_to_text')
+async def image_to_text(data: Data) -> Dict[str, str]:
+    """Extract the text from an image, and preprocess it using the received points."""
+    np_image = decode_image(data.b64image)
+
+    if data.points:
+        points = [(pt['x'], pt['y']) for pt in data.points]
     else:
-        preprocessed = light_preprocessing(np_image)
+        points = None
+    preprocessed = preprocess_image(np_image, points)
 
     text = text_from_image(preprocessed)
     return {'result': text}
+
+
+@app.post('/find_page_points')
+async def find_points(data: Data) -> Dict[str, List[Dict[str, int]]]:
+    """Find the points of the region-of-interest in the image."""
+    np_image = decode_image(data.b64image)
+    points = find_page_points(np_image)
+    return {'points': [{'x': int(pt[0]), 'y': int(pt[1])} for pt in points]}
 
 
 @app.get('/text_to_docx/{text}')

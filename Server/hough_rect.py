@@ -57,9 +57,7 @@ def get_lines_intersect(lines: np.ndarray, img_width: int,
     for (m1, b1), (m2, b2) in itertools.combinations(line_equations, 2):
         if pt := get_intersection_point(m1, b1, m2, b2, img_width, img_height):
             pts.add(pt)
-    print(pts)
     pts = filter_close_pts(list(pts), min_pts_dst=img_width // 10)
-    print(pts)
 
     if len(pts) != 4:
         return None

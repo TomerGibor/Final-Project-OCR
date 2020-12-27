@@ -2,29 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Settings with ChangeNotifier {
-  final preprocessingKey = 'preprocessing';
+  final allowSelectPointsKey = 'allowSelectPoints';
   final darkThemeKey = 'darkTheme';
   final fontSizeFactorKey = 'fontSizeFactor';
   final fontSizeDefaultFactor = 1.1;
 
-  bool _preprocessing;
+  bool _allowSelectPoints;
   bool _darkTheme;
   double _fontSizeFactor;
   SharedPreferences _prefs;
 
   Settings() {
-    _preprocessing = true;
+    _allowSelectPoints = true;
     _darkTheme = false;
     _fontSizeFactor = fontSizeDefaultFactor;
     loadFromPrefs();
   }
 
-  bool get preprocessing => _preprocessing;
+  bool get allowSelectPoints => _allowSelectPoints;
   double get fontSizeFactor => _fontSizeFactor;
   bool get darkTheme => _darkTheme;
 
-  void togglePreprocessing() {
-    _preprocessing = !_preprocessing;
+  void toggleAllowSelectPoints() {
+    _allowSelectPoints = !_allowSelectPoints;
     saveToPrefs();
     notifyListeners();
   }
@@ -49,7 +49,7 @@ class Settings with ChangeNotifier {
 
   Future<void> loadFromPrefs() async {
     await initPrefs();
-    _preprocessing = _prefs.getBool(preprocessingKey) ?? false;
+    _allowSelectPoints = _prefs.getBool(allowSelectPointsKey) ?? true;
     _darkTheme = _prefs.getBool(darkThemeKey) ?? false;
     _fontSizeFactor =
         _prefs.getDouble(fontSizeFactorKey) ?? fontSizeDefaultFactor;
@@ -58,7 +58,7 @@ class Settings with ChangeNotifier {
 
   Future<void> saveToPrefs() async {
     await initPrefs();
-    _prefs.setBool(preprocessingKey, _preprocessing);
+    _prefs.setBool(allowSelectPointsKey, _allowSelectPoints);
     _prefs.setBool(darkThemeKey, _darkTheme);
     _prefs.setDouble(fontSizeFactorKey, _fontSizeFactor);
   }

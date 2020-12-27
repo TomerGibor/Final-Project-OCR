@@ -44,11 +44,11 @@ class SettingsScreen extends StatelessWidget {
               child: ListView(
                 children: [
                   _buildSwitchListTile(
-                    'Preprocessing',
-                    'Pre-process image before performing the text extraction',
-                    settings.preprocessing,
+                    'Selecting Page Points',
+                    'Let me select and correct the points defining the region-of-interest of the image',
+                    settings.allowSelectPoints,
                     (newValue) {
-                      settings.togglePreprocessing();
+                      settings.toggleAllowSelectPoints();
                     },
                   ),
                   _buildSwitchListTile(

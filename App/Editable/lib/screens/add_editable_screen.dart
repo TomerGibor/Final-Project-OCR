@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'select_points_on_image_screen.dart';
 import '../widgets/image_input.dart';
 import '../helpers/http_helper.dart';
 import '../providers/settings.dart';
@@ -18,12 +19,18 @@ class AddEditableScreen extends StatefulWidget {
 
 class _AddEditableScreenState extends State<AddEditableScreen> {
   String _base64Image;
+  File _image;
+  int _imageWidth, _imageHeight;
   var _isLoading = false;
 
   Future<void> _onImageSelected(File image) async {
     final bytes = await image.readAsBytes();
+    final decodedImage = await decodeImageFromList(bytes);
     setState(() {
+      _image = image;
       _base64Image = base64Encode(bytes);
+      _imageHeight = decodedImage.height;
+      _imageWidth = decodedImage.width;
     });
   }
 
@@ -31,15 +38,46 @@ class _AddEditableScreenState extends State<AddEditableScreen> {
     setState(() {
       _isLoading = true;
     });
-    final preprocessing =
-        Provider.of<Settings>(context, listen: false).preprocessing;
+    final allowSelectPoints =
+        Provider.of<Settings>(context, listen: false).allowSelectPoints;
+
     try {
-      final result =
-          await HttpHelper.sendPostImageRequest(_base64Image, preprocessing);
-      setState(() {
-        _isLoading = false;
-      });
-      Navigator.of(context).pop(result);
+      if (!allowSelectPoints) {
+        final result = await HttpHelper.sendPostImageRequest(_base64Image);
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false;
+        });
+        Navigator.of(context).pop(result);
+      } else {
+        final points = await HttpHelper.sendGetPointsRequest(_base64Image);
+        Navigator.of(context)
+            .push(
+          MaterialPageRoute(
+            builder: (ctx) => SelectPointsOnImageScreen(
+              _image,
+              points,
+              imgWidth: _imageWidth,
+              imgHeight: _imageHeight,
+            ),
+          ),
+        )
+            .then((newPoints) async {
+          if (newPoints == null) {
+            setState(() {
+              _isLoading = false;
+            });
+          } else {
+            final result =
+                await HttpHelper.sendPostImageRequest(_base64Image, newPoints);
+            if (!mounted) return;
+            setState(() {
+              _isLoading = false;
+            });
+            Navigator.of(context).pop(result);
+          }
+        });
+      }
     } catch (error) {
       showErrorAlertDialog(context).then((value) {
         setState(() {

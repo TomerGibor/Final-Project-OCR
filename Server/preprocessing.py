@@ -2,40 +2,44 @@
 Module for preprocessing the images, in order the get them to work best
 with the character-cutting and the models.
 """
-from typing import Tuple
+from typing import Tuple, List, Optional
 
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 from scipy.spatial import distance
-from PIL import Image, ImageOps
 
-from hough_rect import find_hough_rect, rect_area
+from hough_rect import find_hough_rect, rect_area, order_points
 
 plt.set_cmap('gray')
 
 
-def preprocess_image(img: np.ndarray) -> np.ndarray:
+def preprocess_image(img: np.ndarray,
+                     points: Optional[List[Tuple[int, int]]] = None) -> np.ndarray:
     """
-    Perform preprocessing on the input image. Try to find corners of the
-    page and transform the image to enlarge and rotate the region-of-interest.
-    If none is found, only do light preprocessing.
+    Perform preprocessing on the input image. If no such given, try to
+    find corners of the page and transform the image to enlarge and
+    rotate the region-of-interest.
+    If no ROI found, only do thresholding.
 
     Args:
+        points (Optional[List[Tuple[int, int]]]): The four points (x and y)
+          defining the region-of-interest.
         img (np.ndarray): The original image which needs to be processed.
     Returns:
         np.ndarray: The preprocessed image.
     """
     original = img.copy()
-
-    if (roi := find_hough_rect(img)) is None \
-            or rect_area(roi) < 0.1 * img.shape[0] * img.shape[1]:
-        # can't process image, no ROI found or rect is too small, return
-        # original image, after being light preprocessed
-        return light_preprocessing(original)
-
+    if not points:
+        if (points := find_hough_rect(img)) is None \
+                or rect_area(points) < 0.1 * img.shape[0] * img.shape[1]:
+            # can't process image, no rect found or rect is too small, return
+            # original image, after thresholding
+            _, threshed = cv2.threshold(original, 255 // 2, 255, cv2.THRESH_OTSU)
+            return threshed
+    points = order_points(np.array(points))
     # rotate the image and transform it around the ROI
-    warped = four_point_transform(original, roi)
+    warped = four_point_transform(original, points)
 
     # final steps of preprocessing - threshing and eroding
     _, threshed = cv2.threshold(warped, 255 // 2, 255, cv2.THRESH_OTSU)
@@ -43,6 +47,17 @@ def preprocess_image(img: np.ndarray) -> np.ndarray:
     plt.imshow(eroded)
     plt.show()
     return eroded
+
+
+def find_page_points(img: np.ndarray) -> List[Tuple[int, int]]:
+    """
+    Find the four points defining the page (region-of-interest).
+    If no such points found, return the edges of the image.
+    """
+    if (rect := find_hough_rect(img)) is None \
+            or rect_area(rect) < 0.1 * img.shape[0] * img.shape[1]:
+        return [(0, 0), (img.shape[1], 0), (img.shape[1], img.shape[0]), (0, img.shape[0])]
+    return [tuple(pt) for pt in rect]
 
 
 def four_point_transform(img: np.ndarray, rect: np.ndarray) -> np.ndarray:
@@ -80,9 +95,3 @@ def calc_dimensions(ordered_pts: np.ndarray) -> Tuple[int, int]:
     max_height = max(int(height1), int(height2))
 
     return max_width, max_height
-
-
-def light_preprocessing(img: np.ndarray) -> np.ndarray:
-    """Perform light preprocessing of the image. Do only thresholding."""
-    _, threshed = cv2.threshold(img, 255 // 2, 255, cv2.THRESH_OTSU)
-    return threshed
