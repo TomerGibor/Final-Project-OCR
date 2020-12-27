@@ -111,7 +111,7 @@ class _SelectPointsOnImageScreenState extends State<SelectPointsOnImageScreen> {
                     child: Text('Reset'),
                     onPressed: () {
                       setState(() {
-                        _modifiedPoints = widget.points;
+                        _modifiedPoints = [...widget.points];
                       });
                     },
                   ),
