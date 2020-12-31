@@ -60,7 +60,7 @@ The classification process will run much faster on a GPU, and using a GPU is rec
 
 Attached are also the files necessary to deploy the server to [heroku](https://heroku.com).
 
-To run the server locally (**make sure you have [Python 3.8](python.org/downloads/release/python-386/) installed** - TensorFlow 2.4 doesn't support other versions of Python right now):
+To run the server locally (**make sure you have [Python 3.8](https://python.org/downloads/release/python-386/) installed** - TensorFlow 2.4 doesn't support other versions of Python right now):
 
 ```bash
 git clone https://github.com/TomerGibor/Final-Project.git
