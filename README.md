@@ -105,15 +105,15 @@ App/Editable
 
 Use the `+` button to add an Editable. Select an image from device storage or take a picture with the camera and press the `Submit` button. Then, if it is enabled in settings, you will be able to check if the page corners are set properly, and if not you will be able to correct then yourself. Press `Confirm` and after a few seconds (or minutes - depends on how much text there is and the speed of your CPU or GPU) the Editable will be added to the list!
 
-<img src="README-GIFs/app.gif" style="zoom:70%;" />
+<img src="README-GIFs/app.gif" width="260" height="562"/>
 
 You can also customize the looks of the app in the settings!
 
-<img src="README-GIFs/settings.gif" style="zoom:70%;" />
+<img src="README-GIFs/settings.gif" width="260" height="562"/>
 
 On the Editable you can perform many operations: edit, copy, share, download as word and translate.
 
-<img src="README-GIFs/operations.gif" style="zoom:70%;" />
+<img src="README-GIFs/operations.gif" width="260" height="562"/>
 
 #### Note
 
