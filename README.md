@@ -1,6 +1,6 @@
 # Final Project - Optical Character Recognition
 
-This is the repository for my final project in computer science for the Ministry of Education.
+This is the repository of my final project in computer science for the Ministry of Education.
 
 ### Objective
 
