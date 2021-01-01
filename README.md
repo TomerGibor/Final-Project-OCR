@@ -1,10 +1,10 @@
-## Final Project
+# Final Project
 
 ### Objective
 
 Develop an algorithm that takes in an image file, and returns the text found in the image as a string. With the algorithm, build an easy-to-use app that'll allow users to scan or upload an image of a document or handwritten text, and "extract" the text from them.
 
-### The Server
+## The Server
 
 The server running the algorithm is comprised of many modules, each tasked with a different part of the objective.
 
@@ -69,8 +69,52 @@ pip install -r requirements.txt
 python server.py
 ```
 
+---
 
+## The App - "Editable"
 
-### The App - "Editable"
+The app is written in the [Flutter](https://flutter.dev) framework using the [Dart](https://dart.dev) programming language. The app is named Editable, since you can take a picture of some text and extract the text from the image and edit it digitally.
 
-TBD.
+#### File Tree
+
+```
+App/Editable
+└── lib
+    ├── helpers
+    │   ├── db_helper.dart
+    │   ├── file_helper.dart
+    │   └── http_helper.dart
+    ├── main.dart
+    ├── providers
+    │   ├── editables.dart
+    │   └── settings.dart
+    ├── screens
+    │   ├── add_editable_screen.dart
+    │   ├── edit_editable_screen.dart
+    │   ├── home_screen.dart
+    │   ├── select_points_on_image_screen.dart
+    │   └── settings_screen.dart
+    └── widgets
+        ├── app_drawer.dart
+        ├── editable_item.dart
+        ├── error_dialog.dart
+        └── image_input.dart
+```
+
+#### How To Use
+
+Use the `+` button to add an Editable. Select an image from device storage or take a picture with the camera and press the `Submit` button. Then, if it is enabled in settings, you will be able to check if the page corners are set properly, and if not you will be able to correct then yourself. Press `Confirm` and after a few seconds (or minutes - depends on how much text there is and the speed of your CPU or GPU) the Editable will be added to the list!
+
+![](README-GIFs/app.gif)
+
+You can also customize the looks of the app in the settings!
+
+![](README-GIFs/settings.gif)
+
+On the Editable you can perform many operations: edit, copy, share, download as word and translate.
+
+![](README-GIFs/operations.gif)
+
+#### Note
+
+To use the app with the server, change the URL of the server in the `http_helper.dart` module to your server URL.
