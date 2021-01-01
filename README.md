@@ -62,7 +62,7 @@ Attached are also the files necessary to deploy the server to [heroku](https://h
 
 To run the server locally (**make sure you have [Python 3.8](https://python.org/downloads/release/python-386/) installed** - TensorFlow 2.4 doesn't support other versions of Python right now):
 
-```bash
+```shell
 git clone https://github.com/TomerGibor/Final-Project.git
 cd ./Server
 pip install -r requirements.txt
@@ -114,6 +114,14 @@ You can also customize the looks of the app in the settings!
 On the Editable you can perform many operations: edit, copy, share, download as word and translate.
 
 <img src="README-GIFs/operations.gif" width="260" height="562"/>
+
+#### Running The App
+
+```shell
+git clone https://github.com/TomerGibor/Final-Project.git
+cd ./App/Editable
+flutter run
+```
 
 #### Note
 
