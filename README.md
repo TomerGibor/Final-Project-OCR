@@ -1,4 +1,6 @@
-# Final Project
+# Final Project - Optical Character Recognition
+
+This is the repository for my final project in computer science for the Ministry of Education.
 
 ### Objective
 
@@ -64,7 +66,7 @@ To run the server locally (**make sure you have [Python 3.8](https://python.org/
 
 ```shell
 git clone https://github.com/TomerGibor/Final-Project.git
-cd ./Server
+cd ./Final-Project-OCR/Server
 pip install -r requirements.txt
 python server.py
 ```
@@ -117,9 +119,11 @@ On the Editable you can perform many operations: edit, copy, share, download as 
 
 #### Running The App
 
+Make sure you have [Flutter](https://https://flutter.dev/docs/get-started/install) installed on your system before trying to run the following code:
+
 ```shell
 git clone https://github.com/TomerGibor/Final-Project.git
-cd ./App/Editable
+cd ./Final-Project-OCR/App/Editable
 flutter run
 ```
 
