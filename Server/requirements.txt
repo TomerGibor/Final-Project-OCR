@@ -2,10 +2,7 @@ tensorflow
 Pillow
 numpy
 scipy
-sklearn
 matplotlib
-pandas
-seaborn
 opencv-python
 fastapi
 uvicorn
