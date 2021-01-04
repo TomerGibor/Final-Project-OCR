@@ -28,6 +28,8 @@ def find_hough_rect(img: np.ndarray) -> Union[None, np.ndarray]:
     lines = cv2.HoughLinesP(edged, rho=1, theta=np.pi / 180, threshold=150,
                             minLineLength=img.shape[0] // 10,
                             maxLineGap=img.shape[0] // 10)
+    if lines is None:
+        return None
     lines = lines.reshape((len(lines), 4))  # remove unnecessary dimension
     # sort lines by their lengths, from longest to shortest
     sorted(lines,

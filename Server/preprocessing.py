@@ -41,12 +41,11 @@ def preprocess_image(img: np.ndarray,
     # rotate the image and transform it around the ROI
     warped = four_point_transform(original, points)
 
-    # final steps of preprocessing - threshing and eroding
+    # final step of preprocessing - threshing
     _, threshed = cv2.threshold(warped, 255 // 2, 255, cv2.THRESH_OTSU)
-    eroded = cv2.erode(threshed, np.ones((2, 2)), iterations=2)
-    plt.imshow(eroded)
+    plt.imshow(threshed)
     plt.show()
-    return eroded
+    return threshed
 
 
 def find_page_points(img: np.ndarray) -> List[Tuple[int, int]]:

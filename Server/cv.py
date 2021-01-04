@@ -178,6 +178,7 @@ def get_letters_bounding_rects(img: np.ndarray) -> List[Union[Rect, str]]:
     contour_rects = sort_rects(contour_rects, median_height)
     contour_rects = remove_enclosing_rects(contour_rects)
     # ---------------- FOR DEBUGGING ---------------
+    _, rects = zip(*contour_rects)
     img2 = cv2.cvtColor(img.copy(), cv2.COLOR_GRAY2RGB)
     for i in rects:
         img2 = cv2.rectangle(img2, (i.x, i.y), (i.x+i.w, i.y+i.h), (0, 255, 0), 2)
