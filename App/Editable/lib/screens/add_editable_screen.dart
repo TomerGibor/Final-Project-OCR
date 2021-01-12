@@ -89,6 +89,12 @@ class _AddEditableScreenState extends State<AddEditableScreen> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+    _image.deleteSync();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
