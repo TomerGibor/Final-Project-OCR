@@ -119,7 +119,7 @@ On the Editable you can perform many operations: edit, copy, share, download as 
 
 #### Running The App
 
-Make sure you have [Flutter](https://https://flutter.dev/docs/get-started/install) installed on your system before trying to run the following code:
+Make sure you have [Flutter](https://flutter.dev/docs/get-started/install) installed on your system before trying to run the following code:
 
 ```shell
 git clone https://github.com/TomerGibor/Final-Project-OCR.git
