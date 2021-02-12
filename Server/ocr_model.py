@@ -21,7 +21,7 @@ class OCRModel(BaseTFModel):
     Class used for building and training a model which is able to
     distinguish between different characters using ML and TensorFlow.
     """
-    BATCH_SIZE = 512
+    BATCH_SIZE = 32
     LR = 1e-3
     MAX_EPOCHS = 30
     MODEL_NAME = 'ocr_model.h5'

@@ -1,4 +1,5 @@
-tensorflow
+tensorflow-gpu
+tf-nightly
 Pillow
 numpy
 scipy
