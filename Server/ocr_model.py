@@ -12,6 +12,7 @@ from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.activations import relu, softmax
 from tensorflow.keras.callbacks import CSVLogger, TensorBoard, EarlyStopping, ModelCheckpoint
 
+import config_tf
 import consts
 from base_model import ModelNotLoadedError, ModelNotBuiltError, BaseTFModel
 
@@ -21,12 +22,13 @@ class OCRModel(BaseTFModel):
     Class used for building and training a model which is able to
     distinguish between different characters using ML and TensorFlow.
     """
-    BATCH_SIZE = 32
-    LR = 1e-3
-    MAX_EPOCHS = 30
+    BATCH_SIZE = 64
+    LR = 3e-4
+    MAX_EPOCHS = 35
     MODEL_NAME = 'ocr_model.h5'
-    BASE_TENSORBOARD_LOGDIR = 'D:\\Keras\\logs\\fit'
-    BASE_HISTORY_LOGDIR = 'logs\\training-history'
+    TENSORBOARD_DIR = 'D:\\Keras\\logs\\fit'
+    LOG_DIR = 'logs\\training-history'
+    CHECKPOINT_DIR = 'D:\\Keras\\models\\training'
 
     def __init__(self):
         super().__init__()
@@ -131,9 +133,9 @@ class OCRModel(BaseTFModel):
 
         # setup TensorBoard and csv logger of training stage
         time = datetime.now().strftime(consts.DATETIME_FORMAT)
-        csv_logger = CSVLogger(f'{self.BASE_HISTORY_LOGDIR}-{time}.csv',
+        csv_logger = CSVLogger(f'{self.LOG_DIR}-{time}.csv',
                                separator=',', append=False)
-        tensorboard = TensorBoard(log_dir=f'{self.BASE_TENSORBOARD_LOGDIR}-{time}',
+        tensorboard = TensorBoard(log_dir=f'{self.TENSORBOARD_DIR}-{time}',
                                   histogram_freq=1,
                                   write_graph=True,
                                   write_images=True,
@@ -146,7 +148,7 @@ class OCRModel(BaseTFModel):
         early_stop = EarlyStopping(monitor='val_accuracy', patience=7, mode='max',
                                    restore_best_weights=True)
         model_checkpoint = ModelCheckpoint(
-            filepath='D:\\Keras\\models\\training\\model-epoch{epoch:02d}-acc-{val_accuracy:4f}.h5',
+            filepath=self.CHECKPOINT_DIR + 'model-epoch{epoch:02d}-acc-{val_accuracy:4f}.h5',
             monitor='val_accuracy')
         callbacks = [csv_logger, tensorboard, early_stop, model_checkpoint]
         self._model.fit(training_data,
@@ -200,6 +202,22 @@ class OCRModel(BaseTFModel):
         predictions = self._model.predict(batch)
         return predictions
 
-    def evaluate(self, images):
-        """Evaluate the model and calculate accuracy and loss."""
-        return self._model.evaluate(images)
+    def evaluate(self, images: np.ndarray = None, folder_path: str = None):
+        """
+        Evaluate the model and calculate accuracy and loss. Works with
+        either the images provided, or the path to these images.
+        """
+        if not images:
+            if not folder_path:
+                raise ValueError('Invalid arguments - either `images` or'
+                                 ' `folder_path` must not be None')
+            img_gen = ImageDataGenerator(rescale=1 / 255)
+            images = img_gen.flow_from_directory(
+                directory=folder_path,
+                target_size=consts.IMAGE_SIZE,
+                classes=consts.MERGED_CLASSES,
+                shuffle=False,
+                color_mode='grayscale',
+                class_mode='categorical'
+            )
+        return self._model.evaluate(images, verbose=1)

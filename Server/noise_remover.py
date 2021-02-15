@@ -13,6 +13,7 @@ from tensorflow.keras.losses import binary_crossentropy
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.activations import relu, sigmoid
 
+import config_tf
 import consts
 from base_model import ModelNotLoadedError, BaseTFModel, singleton, ModelNotBuiltError
 
@@ -20,11 +21,11 @@ from base_model import ModelNotLoadedError, BaseTFModel, singleton, ModelNotBuil
 @singleton
 class ImageLoader:
     def __init__(self):
-        self._X_train: np.array = None
-        self._X_valid: np.array = None
+        self._X_train: np.ndarray = None
+        self._X_valid: np.ndarray = None
 
     @staticmethod
-    def _load_images(path: str) -> np.array:
+    def _load_images(path: str) -> np.ndarray:
         """
         Load images from computer, resize them, convert to grayscale
         and reshape them to fit into numpy arrays.
@@ -33,7 +34,7 @@ class ImageLoader:
             path (str): The path to a folder containing the images to be loaded.
 
         Returns:
-            np.array: array containing the images.
+            np.ndarray: array containing the images.
         """
 
         X_imgs = []
@@ -90,16 +91,16 @@ class DenoisingAutoencoder(BaseTFModel):
         self._image_loader: ImageLoader = ImageLoader()
 
     @staticmethod
-    def _add_gaussian_noise(X_imgs: np.array) -> np.array:
+    def _add_gaussian_noise(X_imgs: np.ndarray) -> np.ndarray:
         """
         Apply Gaussian noise to images.
 
         Args:
-            X_imgs (np.array): The images (provided as np arrays of the shape
+            X_imgs (np.ndarray): The images (provided as np arrays of the shape
              defined in consts) for which to apply gaussian noise algorithm.
 
         Returns:
-            np.array: Images after adding noise with added grayscale color channel.
+            np.ndarray: Images after adding noise with added grayscale color channel.
         """
 
         gaussian_noise_imgs = []
