@@ -22,11 +22,11 @@ class OCRModel(BaseTFModel):
     Class used for building and training a model which is able to
     distinguish between different characters using ML and TensorFlow.
     """
-    BATCH_SIZE = 64
+    BATCH_SIZE = 32
     LR = 3e-4
     MAX_EPOCHS = 35
     MODEL_NAME = 'ocr_model.h5'
-    TENSORBOARD_DIR = 'D:\\Keras\\logs\\fit'
+    TENSORBOARD_DIR = 'D:\\Keras\\tensorboard'
     LOG_DIR = 'logs\\training-history'
     CHECKPOINT_DIR = 'D:\\Keras\\models\\training'
 
@@ -135,7 +135,7 @@ class OCRModel(BaseTFModel):
         time = datetime.now().strftime(consts.DATETIME_FORMAT)
         csv_logger = CSVLogger(f'{self.LOG_DIR}-{time}.csv',
                                separator=',', append=False)
-        tensorboard = TensorBoard(log_dir=f'{self.TENSORBOARD_DIR}-{time}',
+        tensorboard = TensorBoard(log_dir=f'{self.TENSORBOARD_DIR}\\fit-{time}',
                                   histogram_freq=1,
                                   write_graph=True,
                                   write_images=True,
@@ -148,7 +148,7 @@ class OCRModel(BaseTFModel):
         early_stop = EarlyStopping(monitor='val_accuracy', patience=7, mode='max',
                                    restore_best_weights=True)
         model_checkpoint = ModelCheckpoint(
-            filepath=self.CHECKPOINT_DIR + 'model-epoch{epoch:02d}-acc-{val_accuracy:4f}.h5',
+            filepath=self.CHECKPOINT_DIR + '\\model-epoch{epoch:02d}-acc-{val_accuracy:4f}.h5',
             monitor='val_accuracy')
         callbacks = [csv_logger, tensorboard, early_stop, model_checkpoint]
         self._model.fit(training_data,
