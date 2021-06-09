@@ -86,7 +86,7 @@ def get_intersection_point(m1: float, b1: float, m2: float, b2: float,
         x = b2
         y = m1 * x + b1
     else:
-        x = (b2 - b1) / (m1 - m2)  # equation achieved by solving m1*x+b = m2*x+b2
+        x = (b2 - b1) / (m1 - m2)  # equation achieved by solving m1*x+b1 = m2*x+b2
         y = m1 * x + b1
     if x < 0 or x > img_width - 1 or y < 0 or y > img_height - 1:
         # point-of-intersection out of bounds
@@ -131,7 +131,7 @@ def get_line_equation(x1, y1, x2, y2) -> Tuple[float, float]:
     if x1 == x2:
         return consts.INFINITY, x1  # can't divide by zero, returning 'infinite' slope instead
     m = (y2 - y1) / (x2 - x1)  # slope = dy / dx
-    b = -m * x1 + y1  # derived from y-y1 = m(x-x1) and y=mx+b
+    b = -m * x1 + y1  # derived from y=mx+b
     return m, b
 
 

@@ -70,7 +70,7 @@ def text_from_image(img: np.ndarray) -> str:
 
         # predict the character
         prediction = model.predict(denoised)
-        predicted_letter = consts.MERGED_CLASSES[np.argmax(prediction)]
+        predicted_letter = consts.CLASSES[np.argmax(prediction)]
 
         if first_character_of_word and predicted_letter in string.digits:
             is_word_letters = False
@@ -114,21 +114,16 @@ def change_to_similar_character_if_needed(predicted_letter: str,
     visually similar (the model is inaccurate at times), or if we're at
     the middle of a number, replace the letter with a number.
     """
-    if not first_character_of_word:
+    if not first_character_of_word and is_word_letters:
         # the word is made of letters
-        if is_word_letters and predicted_letter == '0':
+        if predicted_letter == '0':
             predicted_letter = 'o'
-        elif is_word_letters and predicted_letter == '1':
+        elif predicted_letter == '1':
             predicted_letter = 'i'
-        elif is_word_letters and predicted_letter == '5':
+        elif predicted_letter == '2':
+            predicted_letter = 'z'
+        elif predicted_letter == '5':
             predicted_letter = 's'
-
-    if not is_word_letters:
-        # should be a number
-        if predicted_letter == 'z':
-            predicted_letter = '2'
-        if predicted_letter == 'i' or predicted_letter == 'l':
-            predicted_letter = '1'
 
     return predicted_letter
 

@@ -4,6 +4,3 @@
 /tests/
 /.idea/
 /__pycache__/
-
-# unfinished files, still a work in progress
-/test_model.py

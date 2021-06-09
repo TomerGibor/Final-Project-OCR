@@ -2,19 +2,23 @@
 Module for building OCR model, training it and performing predictions.
 """
 from datetime import datetime
+from typing import List, Tuple
 
 import numpy as np
 from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, Dropout, InputLayer
+from tensorflow.keras.layers import (Dense, Conv2D, Flatten, MaxPooling2D,
+                                     Dropout, InputLayer)
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing.image import ImageDataGenerator, DirectoryIterator
 from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.activations import relu, softmax
-from tensorflow.keras.callbacks import CSVLogger, TensorBoard, EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import (CSVLogger, TensorBoard,
+                                        EarlyStopping, ModelCheckpoint, Callback)
 
 import config_tf
 import consts
 from base_model import ModelNotLoadedError, ModelNotBuiltError, BaseTFModel
+from model_evaluator import ModelEvaluator
 
 
 class OCRModel(BaseTFModel):
@@ -81,8 +85,7 @@ class OCRModel(BaseTFModel):
 
         print(model.summary())
 
-        # compile the model topography into code that TensorFlow can efficiently
-        # execute. Configure training to minimize the model's categorical crossentropy loss
+        # compile the model topography, set loss function, optimizer, and learning rate
         model.compile(optimizer=Adam(learning_rate=self.LR),
                       loss=categorical_crossentropy,
                       metrics=['accuracy'])
@@ -101,61 +104,13 @@ class OCRModel(BaseTFModel):
         if not self._model_built:
             raise ModelNotBuiltError('The model has to be built before training it.')
 
-        # use the ImageDataGenerator class to rescale pixel values to be between
-        # 0.0 and 1.0 and randomly augment some percentage of images to decrease
-        # overfitting and improve model performance over new test sets
-        train_generator = ImageDataGenerator(rescale=1 / 255,
-                                             shear_range=0.15,
-                                             zoom_range=0.15)
-
-        # load images from computer, convert to grayscale, resize them
-        # and assign them appropriate labels
-        training_data = train_generator.flow_from_directory(
-            directory=consts.TRAIN_MERGED_PATH,
-            target_size=consts.IMAGE_SIZE,
-            classes=consts.MERGED_CLASSES,
-            shuffle=True,
-            batch_size=self.BATCH_SIZE,
-            color_mode='grayscale',
-            class_mode='categorical'
-        )
-
-        validation_generator = ImageDataGenerator(rescale=1 / 255)
-        validation_data = validation_generator.flow_from_directory(
-            directory=consts.VALIDATION_MERGED_PATH,
-            target_size=consts.IMAGE_SIZE,
-            classes=consts.MERGED_CLASSES,
-            shuffle=True,
-            batch_size=self.BATCH_SIZE,
-            color_mode='grayscale',
-            class_mode='categorical'
-        )
-
-        # setup TensorBoard and csv logger of training stage
-        time = datetime.now().strftime(consts.DATETIME_FORMAT)
-        csv_logger = CSVLogger(f'{self.LOG_DIR}-{time}.csv',
-                               separator=',', append=False)
-        tensorboard = TensorBoard(log_dir=f'{self.TENSORBOARD_DIR}\\fit-{time}',
-                                  histogram_freq=1,
-                                  write_graph=True,
-                                  write_images=True,
-                                  update_freq='epoch',
-                                  profile_batch=2,
-                                  embeddings_freq=1)
-
-        # setup early stopping to prevent overfitting and stop training stage
-        # when validation accuracy starts to decrease
-        early_stop = EarlyStopping(monitor='val_accuracy', patience=7, mode='max',
-                                   restore_best_weights=True)
-        model_checkpoint = ModelCheckpoint(
-            filepath=self.CHECKPOINT_DIR + '\\model-epoch{epoch:02d}-acc-{val_accuracy:4f}.h5',
-            monitor='val_accuracy')
-        callbacks = [csv_logger, tensorboard, early_stop, model_checkpoint]
+        training_data, validation_data = self._load_data()
         self._model.fit(training_data,
                         epochs=self.MAX_EPOCHS,
                         verbose=1,
                         validation_data=validation_data,
-                        callbacks=callbacks)
+                        callbacks=self._setup_training_callbacks())
+        self._model_loaded = True
 
     def save_model(self) -> None:
         """Save the model to disk as a HDF5 file."""
@@ -202,22 +157,71 @@ class OCRModel(BaseTFModel):
         predictions = self._model.predict(batch)
         return predictions
 
-    def evaluate(self, images: np.ndarray = None, folder_path: str = None):
+    def evaluate(self, *, images: np.ndarray = None, folder_path: str = None) -> None:
         """
-        Evaluate the model and calculate accuracy and loss. Works with
-        either the images provided, or the path to these images.
+        Evaluate the model: calculate accuracy, show confusion matrix
+        and print classification report. Works with either the images
+        provided, or the path to these images. If none of them are
+        provided, use the default test images path.
         """
-        if not images:
-            if not folder_path:
-                raise ValueError('Invalid arguments - either `images` or'
-                                 ' `folder_path` must not be None')
-            img_gen = ImageDataGenerator(rescale=1 / 255)
-            images = img_gen.flow_from_directory(
-                directory=folder_path,
-                target_size=consts.IMAGE_SIZE,
-                classes=consts.MERGED_CLASSES,
-                shuffle=False,
-                color_mode='grayscale',
-                class_mode='categorical'
-            )
-        return self._model.evaluate(images, verbose=1)
+        if not self._model_loaded:
+            raise ModelNotLoadedError('You have to load the model before evaluating it.')
+
+        evaluator = ModelEvaluator(self._model, images=images, folder_path=folder_path)
+        evaluator.evaluate()
+
+    def _load_data(self) -> Tuple[DirectoryIterator, DirectoryIterator]:
+        # use the ImageDataGenerator class to rescale pixel values to be between
+        # 0.0 and 1.0 and randomly augment some percentage of images to decrease
+        # overfitting and improve model performance over new test sets
+        train_generator = ImageDataGenerator(rescale=1 / 255,
+                                             shear_range=0.15,
+                                             zoom_range=0.15)
+
+        # load images from disk, convert to grayscale, resize them
+        # and assign them appropriate labels
+        training_data = train_generator.flow_from_directory(
+            directory=consts.TRAIN_CATEGORICAL_PATH,
+            target_size=consts.IMAGE_SIZE,
+            classes=consts.CLASSES,
+            shuffle=True,
+            batch_size=self.BATCH_SIZE,
+            color_mode='grayscale',
+            class_mode='categorical'
+        )
+
+        validation_generator = ImageDataGenerator(rescale=1 / 255)
+        validation_data = validation_generator.flow_from_directory(
+            directory=consts.VALIDATION_CATEGORICAL_PATH,
+            target_size=consts.IMAGE_SIZE,
+            classes=consts.CLASSES,
+            shuffle=False,
+            batch_size=self.BATCH_SIZE,
+            color_mode='grayscale',
+            class_mode='categorical'
+        )
+
+        return training_data, validation_data
+
+    def _setup_training_callbacks(self) -> List[Callback]:
+        # setup TensorBoard and csv logger of training stage
+        time = datetime.now().strftime(consts.DATETIME_FORMAT)
+        csv_logger = CSVLogger(f'{self.LOG_DIR}-{time}.csv',
+                               separator=',', append=False)
+        tensorboard = TensorBoard(log_dir=f'{self.TENSORBOARD_DIR}\\fit-{time}',
+                                  histogram_freq=1,
+                                  write_graph=True,
+                                  write_images=True,
+                                  update_freq='epoch',
+                                  profile_batch=2,
+                                  embeddings_freq=1)
+
+        # setup early stopping to prevent overfitting and stop training stage
+        # when validation accuracy starts to decrease
+        early_stop = EarlyStopping(monitor='val_accuracy', patience=7, mode='max',
+                                   restore_best_weights=True)
+        model_checkpoint = ModelCheckpoint(
+            filepath=self.CHECKPOINT_DIR + '\\model-epoch{epoch:02d}-acc-{val_accuracy:4f}.h5',
+            monitor='val_accuracy')
+
+        return [csv_logger, tensorboard, early_stop, model_checkpoint]

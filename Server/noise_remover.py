@@ -1,7 +1,6 @@
 """
 Module used to train the noise remover model,save it to HDF5 format, and later use it.
 """
-
 import glob
 
 import PIL
@@ -61,11 +60,11 @@ class ImageLoader:
             return
 
         # load training images
-        self._X_train = self._load_images(consts.TRAIN_ALL_PATH)
+        self._X_train = self._load_images(consts.TRAIN_NON_CATEGORICAL_PATH)
         print(f'Finished loading {len(self._X_train)} training images.')
 
         # load validation images
-        self._X_valid = self._load_images(consts.VALIDATION_ALL_PATH)
+        self._X_valid = self._load_images(consts.VALIDATION_NON_CATEGORICAL_PATH)
         print(f'Finished loading {len(self._X_valid)} validation images.')
 
     @property
@@ -79,7 +78,7 @@ class ImageLoader:
 
 class DenoisingAutoencoder(BaseTFModel):
     """
-    Class for building, training, and later loading a denoising autoencoder model.
+    Class for building, training, and loading a denoising autoencoder model.
     """
     LR = 1e-3
     EPOCHS = 2
