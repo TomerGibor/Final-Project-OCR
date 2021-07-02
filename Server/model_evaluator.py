@@ -57,11 +57,12 @@ class ModelEvaluator:
         """Prettify classification report, print it, and save it as csv."""
         cr = classification_report(y_true=self._images.classes, y_pred=self._pred)
         lines = cr.split('\n')
-        columns = [c for c in lines[0].split(' ') if c]
+        columns = ['character'] + [c for c in lines[0].split(' ') if c]
         df = pd.DataFrame(index=consts.CLASSES, columns=columns, dtype='float32')
         for i, line in enumerate(lines[2: len(consts.CLASSES) + 2]):
             data = [float(a) for a in line.split(' ') if a][1:]
-            df.iloc[i] = data
+            df.iloc[i] = [consts.CLASSES[i]] + data
+        df = df.set_index('character')
         print(df)
         df.to_csv(f'{consts.EVALUATION_RESULTS_DIR}\\classification_report.csv')
 

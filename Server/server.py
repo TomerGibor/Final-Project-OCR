@@ -6,7 +6,7 @@ import base64
 import io
 import os
 import binascii
-from typing import List, Dict, Optional
+from typing import Optional
 
 import numpy as np
 from PIL import Image, ImageOps, UnidentifiedImageError
@@ -26,7 +26,7 @@ app = FastAPI()
 
 class Data(BaseModel):
     b64image: str
-    points: Optional[List[Dict[str, int]]]
+    points: Optional[list[dict[str, int]]]
 
 
 class InvalidBase64StringError(Exception):
@@ -47,7 +47,7 @@ async def invalid_b64_str_handler(request: Request,
 
 
 @app.exception_handler(InvalidImageStringError)
-async def invalid_b64_str_handler(request: Request,
+async def invalid_b64_img_handler(request: Request,
                                   exc: InvalidImageStringError) -> JSONResponse:
     return JSONResponse(
         status_code=400,
@@ -72,7 +72,7 @@ def decode_image(b64image: str) -> np.ndarray:
 
 
 @app.post('/image_to_text')
-async def image_to_text(data: Data) -> Dict[str, str]:
+async def image_to_text(data: Data) -> dict[str, str]:
     """Extract the text from an image, and preprocess it using the received points."""
     np_image = decode_image(data.b64image)
 
@@ -87,7 +87,7 @@ async def image_to_text(data: Data) -> Dict[str, str]:
 
 
 @app.post('/find_page_points')
-async def find_points(data: Data) -> Dict[str, List[Dict[str, int]]]:
+async def find_points(data: Data) -> dict[str, list[dict[str, int]]]:
     """Find the points of the region-of-interest in the image."""
     np_image = decode_image(data.b64image)
     points = find_page_points(np_image)

@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import Tuple, List, Union
+from typing import Union
 
 import numpy as np
 import cv2
@@ -10,7 +10,7 @@ import consts
 Rect = namedtuple('Rect', 'x y w h')
 
 
-def get_median_dimensions(rects: List[Rect]) -> Tuple[float, float]:
+def get_median_dimensions(rects: list[Rect]) -> tuple[float, float]:
     """Get the 3/4 median of the dimensions."""
     heights = [rect.h for rect in rects]
     widths = [rect.w for rect in rects]
@@ -24,8 +24,8 @@ def get_median_dimensions(rects: List[Rect]) -> Tuple[float, float]:
     return median_width, median_height
 
 
-def filter_contour_rects(contour_rects: List[Tuple[np.ndarray, Rect]],
-                         median_area: float) -> List[Tuple[np.ndarray, Rect]]:
+def filter_contour_rects(contour_rects: list[tuple[np.ndarray, Rect]],
+                         median_area: float) -> list[tuple[np.ndarray, Rect]]:
     """
     Remove tiny or big rects and their matching contours,
     based on their area and the median area.
@@ -52,8 +52,8 @@ def filter_contour_rects(contour_rects: List[Tuple[np.ndarray, Rect]],
     return filtered_contour_rects
 
 
-def sort_rects(contour_rects: List[Tuple[np.ndarray, Rect]],
-               median_height: float) -> List[Tuple[np.ndarray, Rect]]:
+def sort_rects(contour_rects: list[tuple[np.ndarray, Rect]],
+               median_height: float) -> list[tuple[np.ndarray, Rect]]:
     """
     Sort the contours and rects together, by forming liens of characters based
     on change in vertical distance between two characters. After forming lines,
@@ -90,9 +90,9 @@ def sort_rects(contour_rects: List[Tuple[np.ndarray, Rect]],
     return sorted_contour_rects
 
 
-def detect_spaces(contour_rects: List[Tuple[np.ndarray, Rect]],
-                  median_width: float) -> List[Union[Tuple[str, str],
-                                                     Tuple[np.ndarray, Rect]]]:
+def detect_spaces(contour_rects: list[tuple[np.ndarray, Rect]],
+                  median_width: float) -> list[Union[tuple[str, str],
+                                                     tuple[np.ndarray, Rect]]]:
     """
     Detect spaces between sorted contours, by measuring the horizontal
     distance between adjacent contours, and comparing it to the median width.
@@ -115,8 +115,8 @@ def detect_spaces(contour_rects: List[Tuple[np.ndarray, Rect]],
     return with_spaces
 
 
-def remove_enclosing_rects(contour_rects: List[Tuple[np.ndarray, Rect]]) \
-        -> List[Tuple[np.ndarray, Rect]]:
+def remove_enclosing_rects(contour_rects: list[tuple[np.ndarray, Rect]]) \
+        -> list[tuple[np.ndarray, Rect]]:
     """
     Remove rects and their corresponding contours, if one rect is enclosed
     by another. Always removing the enclosed ones.
@@ -146,7 +146,7 @@ def remove_enclosing_rects(contour_rects: List[Tuple[np.ndarray, Rect]]) \
     return filtered
 
 
-def get_letters_bounding_rects(img: np.ndarray) -> List[Union[Rect, str]]:
+def get_letters_bounding_rects(img: np.ndarray) -> list[Union[Rect, str]]:
     """
     Get the enclosing rects of the letters in the image, by sorted order.
     Rects are filtered based on their, and other rect's area. The

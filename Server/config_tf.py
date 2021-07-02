@@ -1,3 +1,7 @@
+"""
+Module used to config TensorFlow to run properly with a GPU.
+To use, just type `import config_tf`.
+"""
 import tensorflow as tf
 
 # configure tensorflow for running on GPU, if present

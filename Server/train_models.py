@@ -1,9 +1,9 @@
 """
 Module for training the models.
-ONLY run once, before deploying the code.
+Only need run once, before deploying the application.
 
 This may take several hours to run, especially if you are not running
-this on a GPU.
+this on a dedicated GPU.
 """
 import config_tf
 from ocr_model import OCRModel

@@ -2,7 +2,7 @@
 Module for preprocessing the images, in order the get them to work best
 with the character-cutting and the models.
 """
-from typing import Tuple, List, Optional
+from typing import Optional
 
 import numpy as np
 import cv2
@@ -15,7 +15,7 @@ plt.set_cmap('gray')
 
 
 def preprocess_image(img: np.ndarray,
-                     points: Optional[List[Tuple[int, int]]] = None) -> np.ndarray:
+                     points: Optional[list[tuple[int, int]]] = None) -> np.ndarray:
     """
     Perform preprocessing on the input image. If no such given, try to
     find corners of the page and transform the image to enlarge and
@@ -48,7 +48,7 @@ def preprocess_image(img: np.ndarray,
     return threshed
 
 
-def find_page_points(img: np.ndarray) -> List[Tuple[int, int]]:
+def find_page_points(img: np.ndarray) -> list[tuple[int, int]]:
     """
     Find the four points defining the page (region-of-interest).
     If no such points found, return the edges of the image.
@@ -76,7 +76,7 @@ def four_point_transform(img: np.ndarray, rect: np.ndarray) -> np.ndarray:
     return warped
 
 
-def calc_dimensions(ordered_pts: np.ndarray) -> Tuple[int, int]:
+def calc_dimensions(ordered_pts: np.ndarray) -> tuple[int, int]:
     """Calculate the dimensions of the new warped image - width and height."""
 
     (tl, tr, br, bl) = ordered_pts

@@ -2,7 +2,6 @@
 Module for building OCR model, training it and performing predictions.
 """
 from datetime import datetime
-from typing import List, Tuple
 
 import numpy as np
 from tensorflow.keras.models import Sequential, load_model
@@ -170,7 +169,7 @@ class OCRModel(BaseTFModel):
         evaluator = ModelEvaluator(self._model, images=images, folder_path=folder_path)
         evaluator.evaluate()
 
-    def _load_data(self) -> Tuple[DirectoryIterator, DirectoryIterator]:
+    def _load_data(self) -> tuple[DirectoryIterator, DirectoryIterator]:
         # use the ImageDataGenerator class to rescale pixel values to be between
         # 0.0 and 1.0 and randomly augment some percentage of images to decrease
         # overfitting and improve model performance over new test sets
@@ -203,7 +202,7 @@ class OCRModel(BaseTFModel):
 
         return training_data, validation_data
 
-    def _setup_training_callbacks(self) -> List[Callback]:
+    def _setup_training_callbacks(self) -> list[Callback]:
         # setup TensorBoard and csv logger of training stage
         time = datetime.now().strftime(consts.DATETIME_FORMAT)
         csv_logger = CSVLogger(f'{self.LOG_DIR}-{time}.csv',
