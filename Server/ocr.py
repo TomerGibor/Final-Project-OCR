@@ -12,7 +12,7 @@ from spellchecker import SpellChecker
 import consts
 from ocr_model import OCRModel
 from noise_remover import DenoisingAutoencoder
-from cv import get_letters_bounding_rects
+from bounding_rects import get_letters_bounding_rects
 
 # load the models
 model = OCRModel()
@@ -67,7 +67,6 @@ def text_from_image(img: np.ndarray) -> str:
         scaled = cv2.resize(character, consts.IMAGE_SIZE) / 255
 
         denoised = denoiser.denoise_image(scaled)
-
         # predict the character
         prediction = model.predict(denoised)
         predicted_letter = consts.CLASSES[np.argmax(prediction)]
@@ -80,7 +79,7 @@ def text_from_image(img: np.ndarray) -> str:
 
         text += predicted_letter
         first_character_of_word = False
-
+    print(f'Before spellchecking: {text}')
     return perform_spellchecking(text)
 
 
@@ -88,20 +87,17 @@ def add_padding(img: np.ndarray) -> np.ndarray:
     """Add white space padding to make the image a square, and add
     padding around the image.
     """
-    width, height = img.shape
+    height, width = img.shape
     max_dim = max(width, height)
-
-    temp = np.ones((max_dim, max_dim)) * 255
+    pad = int(max_dim*consts.CHARACTER_PADDING_RATIO)
+    padded = np.ones((max_dim + 2*pad, max_dim + 2*pad)) * 255
     # calculate the x and y offsets
-    x_offset = (max_dim - width) // 2
-    y_offset = (max_dim - height) // 2
+    x_start = (max_dim - width) // 2 + pad
+    y_start = (max_dim - height) // 2 + pad
     # reposition original image at the center of the new image, with white padding
     # on the sides
-    temp[x_offset:x_offset + width, y_offset:y_offset + height] = img
-
-    # add extra padding from all sides so that the image will not touch
-    # the edge of the array frame
-    return np.pad(temp, consts.CHARACTER_PADDING, constant_values=255)
+    padded[y_start:y_start + height, x_start:x_start + width] = img
+    return padded
 
 
 def change_to_similar_character_if_needed(predicted_letter: str,

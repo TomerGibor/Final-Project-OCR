@@ -35,7 +35,7 @@ def preprocess_image(img: np.ndarray,
                 or rect_area(points) < 0.1 * img.shape[0] * img.shape[1]:
             # can't process image, no rect found or rect is too small, return
             # original image, after thresholding
-            _, threshed = cv2.threshold(original, 255 // 2, 255, cv2.THRESH_OTSU)
+            _, threshed = cv2.threshold(original, 100, 255, cv2.THRESH_BINARY)
             return threshed
     points = order_points(np.array(points))
     # rotate the image and transform it around the ROI
@@ -43,8 +43,6 @@ def preprocess_image(img: np.ndarray,
 
     # final step of preprocessing - threshing
     _, threshed = cv2.threshold(warped, 255 // 2, 255, cv2.THRESH_OTSU)
-    plt.imshow(threshed)
-    plt.show()
     return threshed
 
 

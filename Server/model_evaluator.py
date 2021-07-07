@@ -1,4 +1,6 @@
 """Module used for creating a class that evaluates a model."""
+from collections import defaultdict
+
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from sklearn.metrics import confusion_matrix, classification_report, plot_confusion_matrix
@@ -15,6 +17,7 @@ class ModelEvaluator:
     Class used for evaluating a model, calculating it's accuracy,
     plotting the confusion matrix, and printing the classification report.
     """
+
     def __init__(self, model: Sequential, *, images: np.ndarray = None, folder_path: str = None):
         if images is None:
             if not folder_path:
@@ -52,6 +55,29 @@ class ModelEvaluator:
         ax.set_ylabel('True label')
         plt.savefig(f'{consts.EVALUATION_RESULTS_DIR}\\confusion_matrix.png')
         plt.show()
+        self._common_mistakes_from_cm(cm)
+
+    def _common_mistakes_from_cm(self, cm: np.ndarray) -> None:
+        """Get the non-diagonal intersections in the confusion matrix,
+        and save them into csv."""
+        mistakes = defaultdict(int)
+        for i in range(len(cm)):
+            for j in range(len(cm[i])):
+                if i == j:
+                    continue
+                if i < j:
+                    key = f'{consts.CLASSES[i]}-{consts.CLASSES[j]}'
+                else:
+                    key = f'{consts.CLASSES[j]}-{consts.CLASSES[i]}'
+                mistakes[key] = cm[i, j]
+
+        mistakes = sorted(mistakes.items(), key=lambda item: item[1], reverse=True)
+        support = 2 * int(len(self._pred) / len(consts.CLASSES))
+        mistakes = filter(lambda item: item[1] > support * 0.01, mistakes)
+        df = pd.DataFrame(mistakes, columns=['combination', f'# (of {support})'])
+        df = df.set_index('combination')
+        print(df)
+        df.to_csv(f'{consts.EVALUATION_RESULTS_DIR}\\common_mistakes.csv')
 
     def _print_cr(self) -> None:
         """Prettify classification report, print it, and save it as csv."""

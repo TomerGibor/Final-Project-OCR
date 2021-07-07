@@ -19,11 +19,7 @@ def find_hough_rect(img: np.ndarray) -> Union[None, np.ndarray]:
     the rectangle, else returning None.
     """
     img = cv2.GaussianBlur(img, (7, 7), 0)
-    plt.imshow(img)
-    plt.show()
     edged = cv2.Canny(img, 50, 250, apertureSize=3)
-    plt.imshow(edged)
-    plt.show()
 
     lines = cv2.HoughLinesP(edged, rho=1, theta=np.pi / 180, threshold=150,
                             minLineLength=img.shape[0] // 10,
@@ -36,7 +32,7 @@ def find_hough_rect(img: np.ndarray) -> Union[None, np.ndarray]:
            key=lambda l: distance.euclidean((l[0], l[1]), (l[2], l[3])),
            reverse=True)
     longest_lines = lines[:10]  # take the longest lines
-    debug_show_lines(longest_lines, img.shape)
+    # debug_show_lines(longest_lines, img.shape)
     pts = get_lines_intersect(longest_lines, img.shape[1], img.shape[0])
     if pts is None:
         # hasn't managed to find four points of intersection
