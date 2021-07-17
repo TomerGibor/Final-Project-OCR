@@ -3,10 +3,8 @@ Module for extracting the text from an image using optical-character-recognition
 """
 import string
 
-import PIL
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 from spellchecker import SpellChecker
 
 import consts
@@ -20,8 +18,6 @@ denoiser = DenoisingAutoencoder()
 model.load_model()
 denoiser.load_model()
 
-# set color palette to gray
-plt.set_cmap('gray')
 spellchecker = SpellChecker()
 common_mistakes = {
     'ls': 'is',
@@ -135,5 +131,5 @@ def perform_spellchecking(text: str) -> str:
     corrected_words = []
     for word in words:
         corrected_words.append(spellchecker.correction(word))
-    print(' '.join(corrected_words))
+    print(f'After spellchecking: {" ".join(corrected_words)}')
     return ' '.join(corrected_words)

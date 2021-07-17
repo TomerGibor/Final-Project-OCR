@@ -72,7 +72,7 @@ class ModelEvaluator:
                 mistakes[key] = cm[i, j]
 
         mistakes = sorted(mistakes.items(), key=lambda item: item[1], reverse=True)
-        support = 2 * int(len(self._pred) / len(consts.CLASSES))
+        support = int(len(self._pred) / len(consts.CLASSES))
         mistakes = filter(lambda item: item[1] > support * 0.01, mistakes)
         df = pd.DataFrame(mistakes, columns=['combination', f'# (of {support})'])
         df = df.set_index('combination')

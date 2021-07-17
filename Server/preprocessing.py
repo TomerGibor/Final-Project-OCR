@@ -6,12 +6,9 @@ from typing import Optional
 
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
 from scipy.spatial import distance
 
 from hough_rect import find_hough_rect, rect_area, order_points
-
-plt.set_cmap('gray')
 
 
 def preprocess_image(img: np.ndarray,
@@ -20,10 +17,10 @@ def preprocess_image(img: np.ndarray,
     Perform preprocessing on the input image. If no such given, try to
     find corners of the page and transform the image to enlarge and
     rotate the region-of-interest.
-    If no ROI found, only do thresholding.
+    If no ROI is found, only do thresholding.
 
     Args:
-        points (Optional[List[Tuple[int, int]]]): The four points (x and y)
+        points (Optional[list[tuple[int, int]]]): The four points (x and y)
           defining the region-of-interest.
         img (np.ndarray): The original image which needs to be processed.
     Returns:
@@ -42,7 +39,7 @@ def preprocess_image(img: np.ndarray,
     warped = four_point_transform(original, points)
 
     # final step of preprocessing - threshing
-    _, threshed = cv2.threshold(warped, 255 // 2, 255, cv2.THRESH_OTSU)
+    _, threshed = cv2.threshold(warped, 255 // 2, 255, cv2.THRESH_BINARY)
     return threshed
 
 

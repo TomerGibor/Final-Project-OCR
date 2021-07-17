@@ -1,7 +1,6 @@
 name: Editable
 description: A new Flutter project.
 
-
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -45,18 +44,3 @@ flutter:
 
   assets:
     - assets/images/docx_icon.png
-
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/custom-fonts/#from-packages

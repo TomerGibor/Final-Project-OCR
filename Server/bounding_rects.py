@@ -1,3 +1,6 @@
+"""
+Module used for getting the letters bounding rects.
+"""
 from collections import namedtuple
 from typing import Union
 
@@ -89,7 +92,7 @@ def get_rows(img: np.ndarray) -> list[tuple[int, int]]:
 
 def rects_from_row(img: np.ndarray, start_row: int, end_row: int) -> list[Rect]:
     """Get a list of the rects enclosing the letters from all sides,
-     withing a certain row."""
+     within a certain row."""
     rects = []
     h, w = img.shape
     col = 0
@@ -108,7 +111,7 @@ def rects_from_row(img: np.ndarray, start_row: int, end_row: int) -> list[Rect]:
         top = start_row
         while top < h and not black_in_row(img, top, start_col, col):
             top += 1
-        bottom = end_row
+        bottom = end_row - 1
         while bottom > 0 and not black_in_row(img, bottom, start_col, col):
             bottom -= 1
 
@@ -145,7 +148,6 @@ def get_letters_bounding_rects(img: np.ndarray) -> list[Union[Rect, str]]:
          spaces, represented by `consts.SPACE`, separating words.
     """
     img = img.copy()  # np arrays are mutable and are passed by reference
-
     # blur the image
     img = cv2.GaussianBlur(img, (3, 3), 0)
 

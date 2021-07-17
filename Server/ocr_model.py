@@ -11,8 +11,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, DirectoryIterator
 from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.activations import relu, softmax
-from tensorflow.keras.callbacks import (CSVLogger, TensorBoard,
-                                        EarlyStopping, ModelCheckpoint, Callback)
+from tensorflow.keras.callbacks import CSVLogger, EarlyStopping, Callback
 
 import config_tf
 import consts
@@ -29,9 +28,7 @@ class OCRModel(BaseTFModel):
     LR = 3e-4
     MAX_EPOCHS = 35
     MODEL_NAME = 'ocr_model.h5'
-    TENSORBOARD_DIR = 'D:\\Keras\\tensorboard'
     LOG_DIR = 'logs\\training-history'
-    CHECKPOINT_DIR = 'D:\\Keras\\models\\training'
 
     def __init__(self):
         super().__init__()
@@ -55,18 +52,18 @@ class OCRModel(BaseTFModel):
         model.add(Conv2D(filters=64, kernel_size=(3, 3), activation=relu, padding='same'))
         # add max pooling layer to reduce image dimensions by a factor of 2 (reduce
         # total size by 4) and remove unwanted noise
-        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=2))
 
         # add another set of convolutional and max pooling layers, while
         # increasing the amount of filters per layer
         model.add(Conv2D(filters=128, kernel_size=(3, 3), activation=relu, padding='same'))
         # add dropout layer to prevent overfitting
         model.add(Dropout(0.15))
-        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=2))
 
         model.add(Conv2D(filters=256, kernel_size=(3, 3), activation=relu, padding='same'))
         model.add(Dropout(0.15))
-        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=2))
 
         # flatten the output from max pooling layer (2D output) into a
         # one-dimensional tensor
@@ -175,7 +172,8 @@ class OCRModel(BaseTFModel):
         # overfitting and improve model performance over new test sets
         train_generator = ImageDataGenerator(rescale=1 / 255,
                                              shear_range=0.15,
-                                             zoom_range=0.15)
+                                             zoom_range=0.15,
+                                             rotation_range=0.15)
 
         # load images from disk, convert to grayscale, resize them
         # and assign them appropriate labels
@@ -203,24 +201,12 @@ class OCRModel(BaseTFModel):
         return training_data, validation_data
 
     def _setup_training_callbacks(self) -> list[Callback]:
-        # setup TensorBoard and csv logger of training stage
+        # setup csv logger of training stage
         time = datetime.now().strftime(consts.DATETIME_FORMAT)
         csv_logger = CSVLogger(f'{self.LOG_DIR}-{time}.csv',
                                separator=',', append=False)
-        tensorboard = TensorBoard(log_dir=f'{self.TENSORBOARD_DIR}\\fit-{time}',
-                                  histogram_freq=1,
-                                  write_graph=True,
-                                  write_images=True,
-                                  update_freq='epoch',
-                                  profile_batch=2,
-                                  embeddings_freq=1)
-
         # setup early stopping to prevent overfitting and stop training stage
         # when validation accuracy starts to decrease
         early_stop = EarlyStopping(monitor='val_accuracy', patience=7, mode='max',
                                    restore_best_weights=True)
-        model_checkpoint = ModelCheckpoint(
-            filepath=self.CHECKPOINT_DIR + '\\model-epoch{epoch:02d}-acc-{val_accuracy:4f}.h5',
-            monitor='val_accuracy')
-
-        return [csv_logger, tensorboard, early_stop, model_checkpoint]
+        return [csv_logger, early_stop]

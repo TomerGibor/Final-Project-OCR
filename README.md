@@ -14,12 +14,13 @@ The server running the algorithm is comprised of many modules, each tasked with 
 
 ```
 Server
-├── Procfile
-├── Procfile.windows
 ├── base_model.py
+├── bounding_rects.py
+├── config_tf.py
 ├── consts.py
-├── cv.py
+├── evaluate_model.py
 ├── hough_rect.py
+├── model_evaluator.py
 ├── noise_remover.h5
 ├── noise_remover.py
 ├── ocr.py
@@ -27,7 +28,6 @@ Server
 ├── ocr_model.py
 ├── preprocessing.py
 ├── requirements.txt
-├── runtime.txt
 ├── server.py
 └── train_models.py
 ```
@@ -50,9 +50,9 @@ Using the points, the original image is transformed to only include the area enc
 
 In the preprocessed image, the bounding rectangles of the contours of each individual characters are found. The rectangles are sorted to the correct order of characters present in the image, and spaces are detected between each sequence of characters (word).
 
-Each individual character is then cut and placed into it's own NumPy array, which is passed through the models. First the image of the character is passed to a denoising autoencoder, which denoises and softens the image. Then, they are passed to the classifier model. Said model is built using TensorFlow's Keras API, and can be loaded from the HDF5 file. The machine-learning model is a CNN (Convolutional Neural Network) comprised of many layers, and was trained with over 300,000 images from the [EMNIST database](https://www.nist.gov/srd/nist-special-database-19) (Extended Modified National Institute of Standards and Technology database - using the merged version). The model is able to classify an image of a character to a 92.42% accuracy. The model outputs only lowercase letters and digits, but the input may also be an uppercase character.
+Each individual character is then cut and placed into it's own NumPy array, which is passed through the models. First the image of the character is passed to a denoising autoencoder, which denoises and softens the image. Then, they are passed to the classifier model. Said model is built using TensorFlow's Keras API, and can be loaded from the HDF5 file. The machine-learning model is a CNN (Convolutional Neural Network) comprised of many layers, and was trained with over 300,000 images from the [EMNIST database](https://www.nist.gov/srd/nist-special-database-19) (Extended Modified National Institute of Standards and Technology database - using the merged version). The model is able to classify an image of a character to a 92.91% accuracy. The model outputs only lowercase letters and digits, but the input may also be an uppercase character.
 
-If you wish to train the model by yourself, download the image files, change the train and validation paths in `consts.py` and run `train_models.py` (be advised - the process may take over 24 hours if ran on a CPU, and it will operate better on a GPU). Before training, also set the paths at the beginning of the `OCRModel` class to your desired locations for the `TensorBoard` and the model checkpoints, or delete them entirely in the code.
+If you wish to train the model by yourself, download the image files, change the train and validation paths in `consts.py` and run `train_models.py` (be advised - the process may take over 24 hours if ran on a CPU, and it will operate better on a GPU).
 
 After joining the characters outputted from the classifier, spellchecking is performed on the text, to fix any other errors which occurred during the classification process. The output text is then returned to the client.
 
@@ -64,7 +64,7 @@ The classification process will run much faster on a GPU, and using a GPU is rec
 
 Attached are also the files necessary to deploy the server to [heroku](https://heroku.com).
 
-To run the server locally (**make sure you have [Python 3.8](https://python.org/downloads/release/python-386/) installed** - TensorFlow 2.4 doesn't support other versions of Python right now):
+To run the server locally (**make sure you have [Python 3.9](https://python.org/downloads/release/python-396/) installed** - TensorFlow 2.5 doesn't support other versions of Python right now):
 
 ```shell
 git clone https://github.com/TomerGibor/Final-Project-OCR.git
