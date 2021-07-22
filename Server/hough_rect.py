@@ -2,7 +2,7 @@
 Module for finding a rectangle in the image, using Hough Line Transform.
 """
 import itertools
-from typing import Tuple, List, Union
+from typing import Union
 
 import numpy as np
 import cv2
@@ -28,9 +28,9 @@ def find_hough_rect(img: np.ndarray) -> Union[None, np.ndarray]:
         return None
     lines = lines.reshape((len(lines), 4))  # remove unnecessary dimension
     # sort lines by their lengths, from longest to shortest
-    sorted(lines,
-           key=lambda l: distance.euclidean((l[0], l[1]), (l[2], l[3])),
-           reverse=True)
+    lines = sorted(lines,
+                   key=lambda l: distance.euclidean((l[0], l[1]), (l[2], l[3])),
+                   reverse=True)
     longest_lines = lines[:10]  # take the longest lines
     # debug_show_lines(longest_lines, img.shape)
     pts = get_lines_intersect(longest_lines, img.shape[1], img.shape[0])
@@ -40,8 +40,8 @@ def find_hough_rect(img: np.ndarray) -> Union[None, np.ndarray]:
     return order_points(np.array(pts))
 
 
-def get_lines_intersect(lines: np.ndarray, img_width: int,
-                        img_height: int) -> Union[None, List[Tuple[int, int]]]:
+def get_lines_intersect(lines: list, img_width: int,
+                        img_height: int) -> Union[None, list[tuple[int, int]]]:
     """
     Get the intersection points of the lines, only if there are exactly
     four of them. Reduce mistakes by filtering close points and unwanted
@@ -63,8 +63,8 @@ def get_lines_intersect(lines: np.ndarray, img_width: int,
 
 
 def get_intersection_point(m1: float, b1: float, m2: float, b2: float,
-                           img_width: int, img_height: int)\
-        -> Union[None, Tuple[int, int]]:
+                           img_width: int, img_height: int) \
+        -> Union[None, tuple[int, int]]:
     """
     Get the intersection points of two lines. If the point-of-intersection
     is out of bounds or the angle between the two lines is too small,
@@ -100,8 +100,8 @@ def get_intersection_point(m1: float, b1: float, m2: float, b2: float,
     return int(x), int(y)
 
 
-def filter_close_pts(pts: List[Tuple[int, int]],
-                     min_pts_dst: int = 100) -> List[Tuple[int, int]]:
+def filter_close_pts(pts: list[tuple[int, int]],
+                     min_pts_dst: int = 100) -> list[tuple[int, int]]:
     """
     Remove points that are too close one another (usually caused by
     duplicate lines or lines very close to each other).
@@ -116,7 +116,7 @@ def filter_close_pts(pts: List[Tuple[int, int]],
     return filtered_pts
 
 
-def get_line_equation(x1, y1, x2, y2) -> Tuple[float, float]:
+def get_line_equation(x1, y1, x2, y2) -> tuple[float, float]:
     """
     Get line equation (of the form y=mx+b), defined by two points.
     Returning the slope and b. If the two dots are on the same vertical

@@ -2,13 +2,10 @@
 Module used for getting the letters bounding rects.
 """
 from collections import namedtuple
-from typing import Union
 
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-
-import consts
 
 Rect = namedtuple('Rect', 'x y w h')
 
@@ -21,23 +18,26 @@ def get_median_width(rects: list[Rect]) -> float:
     return median_width
 
 
-def detect_spaces(rects: list[Rect], median_width: float) -> list[Union[Rect, str]]:
+def divide_into_words(rects: list[Rect]) -> list[list[Rect]]:
     """
-    Detect spaces between rects, by measuring the horizontal distance
-    between adjacent rects, and comparing it to the median width of a rect.
+    Divide the rects into words, by detecting spaces between rects, which
+    is done by measuring the horizontal distance between adjacent rects,
+    and comparing it to the median width of a rect.
     """
+    median_width = get_median_width(rects)
+
     if len(rects) <= 1:
-        return rects
-    with_spaces = []
+        return [rects]
+    words, word = [], []
     horizontal_distance = lambda r1, r2: r2.x - (r1.x + r1.w)
     for rect1, rect2 in zip(rects[:-1], rects[1:]):
-        with_spaces.append(rect1)
+        word.append(rect1)
         if horizontal_distance(rect1, rect2) > median_width / 1.5 \
                 or horizontal_distance(rect1, rect2) < -2 * median_width:
-            with_spaces.append(consts.SPACE)
-    with_spaces.append(rect2)
-
-    return with_spaces
+            words.append(word)
+            word = []
+    words.append(word + [rect2])
+    return words
 
 
 def black_in_row(img: np.ndarray, row: int, from_col: int, to_col: int) -> bool:
@@ -117,12 +117,12 @@ def rects_from_row(img: np.ndarray, start_row: int, end_row: int) -> list[Rect]:
 
         letter_w = col - start_col
         letter_h = bottom - top
-        if start_col != w and letter_w*letter_h > 400:
+        if start_col != w and letter_w * letter_h > 200:
             rects.append(Rect(start_col, top, letter_w, letter_h))
     return rects
 
 
-def get_rects_without_spaces(img: np.ndarray) -> list[Rect]:
+def get_rects_not_seperated(img: np.ndarray) -> list[Rect]:
     """Loop through every row, and obtain all of the rectangles in the row."""
     h, w = img.shape
     rows = get_rows(img)
@@ -133,27 +133,23 @@ def get_rects_without_spaces(img: np.ndarray) -> list[Rect]:
     return rects
 
 
-def get_letters_bounding_rects(img: np.ndarray) -> list[Union[Rect, str]]:
+def get_letters_bounding_rects_as_words(img: np.ndarray) -> list[list[Rect]]:
     """
-    Get the enclosing rects of the letters in the image, in a sorted order.
-    The returned rects contain spaces, represented by `consts.SPACE`,
-    between each word it the text, which are also calculated dynamically
-    based on the image resolution.
+    Get the enclosing rects of the letters in the image, in a sorted order,
+    as a list of lists of rects.
 
     Args:
         img (np.ndarray): The source image.
 
     Returns:
-       List[Union[Rect, str]]: A list of the bounding rectangles and
-         spaces, represented by `consts.SPACE`, separating words.
+       list[list[Rect]]: A list of words, where a word is a list of the
+         bounding rectangles of every character.
     """
     img = img.copy()  # np arrays are mutable and are passed by reference
     # blur the image
     img = cv2.GaussianBlur(img, (3, 3), 0)
-
     # obtain the enclosing rectangles
-    rects = get_rects_without_spaces(img)
-    median_width = get_median_width(rects)
+    rects = get_rects_not_seperated(img)
 
     # ---------------- FOR DEBUGGING ---------------
     img2 = cv2.cvtColor(img.copy(), cv2.COLOR_GRAY2RGB)
@@ -162,5 +158,5 @@ def get_letters_bounding_rects(img: np.ndarray) -> list[Union[Rect, str]]:
     plt.imshow(img2)
     plt.show()
     # ----------------------------------------------
-    with_spaces = detect_spaces(rects, median_width)
-    return with_spaces
+    words = divide_into_words(rects)
+    return words

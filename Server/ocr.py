@@ -10,7 +10,7 @@ from spellchecker import SpellChecker
 import consts
 from ocr_model import OCRModel
 from noise_remover import DenoisingAutoencoder
-from bounding_rects import get_letters_bounding_rects
+from bounding_rects import get_letters_bounding_rects_as_words, Rect
 
 # load the models
 model = OCRModel()
@@ -41,24 +41,23 @@ def text_from_image(img: np.ndarray) -> str:
         str: The extracted text.
     """
 
-    rects = get_letters_bounding_rects(img)
+    words = get_letters_bounding_rects_as_words(img)
+    text = ' '.join([characters_from_word(img, word) for word in words])
+    print(f'Before spellchecking: {text}')
+    return perform_spellchecking(text)
 
-    text = ''
+
+def characters_from_word(img: np.ndarray, word: list[Rect]) -> str:
+    """Predict the word one letter at a time. Cut rect from image, add
+    padding, resize, de-noise, and predict."""
     first_character_of_word = True
     is_word_letters = True  # whether the word starts with a letter or a number
-
-    for rect in rects:
-        if rect == consts.SPACE:
-            text += ' '
-            first_character_of_word = True
-            is_word_letters = True
-            continue
-
+    text = ''
+    for rect in word:
         # crop the bounding rect of the contour from the original image
         character = img[rect.y:rect.y + rect.h, rect.x:rect.x + rect.w]
         # add white padding around the character and center it in the frame
         character = add_padding(character)
-
         # resize the image, and rescale pixel values to be between 0.0 and 1.0
         scaled = cv2.resize(character, consts.IMAGE_SIZE) / 255
 
@@ -75,8 +74,7 @@ def text_from_image(img: np.ndarray) -> str:
 
         text += predicted_letter
         first_character_of_word = False
-    print(f'Before spellchecking: {text}')
-    return perform_spellchecking(text)
+    return text
 
 
 def add_padding(img: np.ndarray) -> np.ndarray:
@@ -85,8 +83,8 @@ def add_padding(img: np.ndarray) -> np.ndarray:
     """
     height, width = img.shape
     max_dim = max(width, height)
-    pad = int(max_dim*consts.CHARACTER_PADDING_RATIO)
-    padded = np.ones((max_dim + 2*pad, max_dim + 2*pad)) * 255
+    pad = int(max_dim * consts.CHARACTER_PADDING_RATIO)
+    padded = np.ones((max_dim + 2 * pad, max_dim + 2 * pad)) * 255
     # calculate the x and y offsets
     x_start = (max_dim - width) // 2 + pad
     y_start = (max_dim - height) // 2 + pad
@@ -101,10 +99,9 @@ def change_to_similar_character_if_needed(predicted_letter: str,
                                           is_word_letters: bool) -> str:
     """
     Alter the predicted character to a character that looks similar, from
-    letters to numbers or the other way around. In case the character is
-    positioned in the middle of a word, replace it with a number that is
-    visually similar (the model is inaccurate at times), or if we're at
-    the middle of a number, replace the letter with a number.
+    numbers to letters. In case the character is a number positioned in
+    the middle of a word, replace it with a letter that is visually
+    similar (the model is inaccurate at times).
     """
     if not first_character_of_word and is_word_letters:
         # the word is made of letters
@@ -128,8 +125,6 @@ def perform_spellchecking(text: str) -> str:
     """
     words = text.split(' ')
     words = [common_mistakes.get(word, word) for word in words]
-    corrected_words = []
-    for word in words:
-        corrected_words.append(spellchecker.correction(word))
+    corrected_words = [spellchecker.correction(word) for word in words]
     print(f'After spellchecking: {" ".join(corrected_words)}')
     return ' '.join(corrected_words)
