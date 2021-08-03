@@ -6,7 +6,7 @@ import 'package:Editable/helpers/file_helper.dart';
 import 'package:http/http.dart' as http;
 
 class HttpHelper {
-  static const baseUrl = '104.248.135.42:8080';
+  static const baseUrl = '104.248.135.42';
 
   static Future<String> sendPostImageRequest(String b64Image,
       [List<Point<double>> points]) async {

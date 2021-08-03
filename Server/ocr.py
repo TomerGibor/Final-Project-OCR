@@ -54,16 +54,9 @@ def characters_from_word(img: np.ndarray, word: list[Rect]) -> str:
     is_word_letters = True  # whether the word starts with a letter or a number
     text = ''
     for rect in word:
-        # crop the bounding rect of the contour from the original image
-        character = img[rect.y:rect.y + rect.h, rect.x:rect.x + rect.w]
-        # add white padding around the character and center it in the frame
-        character = add_padding(character)
-        # resize the image, and rescale pixel values to be between 0.0 and 1.0
-        scaled = cv2.resize(character, consts.IMAGE_SIZE) / 255
-
-        denoised = denoiser.denoise_image(scaled)
+        char = prepare_character_for_prediction(img, rect)
         # predict the character
-        prediction = model.predict(denoised)
+        prediction = model.predict(char)
         predicted_letter = consts.CLASSES[np.argmax(prediction)]
 
         if first_character_of_word and predicted_letter in string.digits:
@@ -75,6 +68,19 @@ def characters_from_word(img: np.ndarray, word: list[Rect]) -> str:
         text += predicted_letter
         first_character_of_word = False
     return text
+
+
+def prepare_character_for_prediction(img: np.ndarray, rect: Rect) -> np.ndarray:
+    """Cut the character from the image according to the given rect,
+    add padding and scale the image appropriately."""
+    # crop the bounding rect of the character from the original image
+    character = img[rect.y:rect.y + rect.h, rect.x:rect.x + rect.w]
+    # add white padding around the character and center it in the frame
+    character = add_padding(character)
+    # resize the image, and rescale pixel values to be between 0.0 and 1.0
+    scaled = cv2.resize(character, consts.IMAGE_SIZE) / 255
+    denoised = denoiser.denoise_image(scaled)
+    return denoised
 
 
 def add_padding(img: np.ndarray) -> np.ndarray:

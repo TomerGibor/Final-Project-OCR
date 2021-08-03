@@ -1,10 +1,9 @@
 """
-Module for running the server that communicated with the clients and
+Module for running the server that communicates with the clients and
 answers their requests.
 """
 import base64
 import io
-import os
 import binascii
 from typing import Optional
 
@@ -13,7 +12,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from docx import Document
 from docx.shared import Pt
 
@@ -24,9 +23,14 @@ from preprocessing import preprocess_image, find_page_points
 app = FastAPI()
 
 
+class Point(BaseModel):
+    x: int
+    y: int
+
+
 class Data(BaseModel):
     b64image: str
-    points: Optional[list[dict[str, int]]]
+    points: Optional[list[Point]] = Field(None, min_items=4, max_items=4)
 
 
 class InvalidBase64StringError(Exception):
@@ -77,7 +81,7 @@ async def image_to_text(data: Data) -> dict[str, str]:
     np_image = decode_image(data.b64image)
 
     if data.points:
-        points = [(pt['x'], pt['y']) for pt in data.points]
+        points = [(pt.x, pt.y) for pt in data.points]
     else:
         points = None
     preprocessed = preprocess_image(np_image, points)
@@ -112,4 +116,4 @@ async def text_to_docx(text: str):
 
 
 if __name__ == '__main__':
-    uvicorn.run('server:app', host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+    uvicorn.run('server:app', host='0.0.0.0', port=80)
