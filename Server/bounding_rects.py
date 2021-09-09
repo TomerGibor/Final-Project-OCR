@@ -24,12 +24,13 @@ def divide_into_words(rects: list[Rect]) -> list[list[Rect]]:
     is done by measuring the horizontal distance between adjacent rects,
     and comparing it to the median width of a rect.
     """
-    median_width = get_median_width(rects)
-
     if len(rects) <= 1:
         return [rects]
+
+    median_width = get_median_width(rects)
     words, word = [], []
     horizontal_distance = lambda r1, r2: r2.x - (r1.x + r1.w)
+
     for rect1, rect2 in zip(rects[:-1], rects[1:]):
         word.append(rect1)
         if horizontal_distance(rect1, rect2) > median_width / 1.5 \
