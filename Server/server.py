@@ -59,6 +59,16 @@ async def invalid_b64_img_handler(request: Request,
     )
 
 
+
+
+
+
+
+
+
+
+
+
 def decode_image(b64image: str) -> np.ndarray:
     """Try decoding the image from base64 string, into numpy array."""
     try:
